@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>資料視覺化平台 🎨</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { padding: 30px; background-color: #fafafa; }
+    .form-check-label { margin-right: 10px; }
+    .info-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 15px 20px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📊 上傳 CSV 檔案</h2>
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="data_file" accept=".csv" class="form-control mt-2" required>
+    <button type="submit" class="btn btn-primary mt-3">上傳</button>
+  </form>
+
+  {% if uploaded %}
+  <hr>
+  <div class="alert alert-success mt-3">
+    ✅ {{ message }}
+  </div>
+
+  <!-- 📁 檔案資訊卡 -->
+  <div class="info-card">
+    <div class="row">
+      <div class="col-md-3"><strong>📁 檔案名稱：</strong> {{ file_name }}</div>
+      <div class="col-md-3"><strong>🕒 上傳時間：</strong> {{ upload_time }}</div>
+      <div class="col-md-3"><strong>⚙️ 編碼：</strong> {{ encoding }}</div>
+      <div class="col-md-3"><strong>📊 檔案大小：</strong> {{ file_size }}</div>
+    </div>
+  </div>
+
+  <!-- 缺失值統計 -->
+  <h5 class="mt-4">⚠️ 缺失值統計：</h5>
+  <div class="table-responsive">
+    {{ missing|safe }}
+  </div>
+
+  <!-- 自動摘要統計 -->
+  <h5 class="mt-4">📈 自動摘要統計結果：</h5>
+  <div class="table-responsive">
+    {{ summary|safe }}
+  </div>
+
+  <!-- 繪圖設定 -->
+  <hr>
+  <h4 class="mt-4">🎨 自訂圖表選項：</h4>
+  <div class="row g-3 mt-2">
+    <div class="col-md-6">
+      <label class="form-label">X 軸欄位：</label>
+      <select id="x_col" class="form-select">
+        {% for col in columns %}
+          <option value="{{ col }}">{{ col }}</option>
+        {% endfor %}
+      </select>
+      <input type="text" id="x_label" class="form-control mt-2" placeholder="可自訂 X 軸名稱 (預設使用欄位名)">
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Y 軸欄位（可多選）：</label><br>
+      {% for col in columns %}
+        <div class="form-check form-check-inline">
+          <input class="form-check-input y-check" type="checkbox" value="{{ col }}" id="check_{{ col }}">
+          <label class="form-check-label" for="check_{{ col }}">{{ col }}</label>
+        </div>
+      {% endfor %}
+      <input type="text" id="y_label" class="form-control mt-2" placeholder="可自訂 Y 軸名稱 (預設使用欄位名)">
+    </div>
+  </div>
+
+  <div class="row g-3 mt-3">
+    <div class="col-md-4">
+      <label class="form-label">線條樣式：</label>
+      <select id="line_style" class="form-select">
+        <option value="solid">實線</option>
+        <option value="dashed">虛線</option>
+        <option value="dotted">點線</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">點樣式：</label>
+      <select id="point_style" class="form-select">
+        <option value="circle">圓點</option>
+        <option value="rect">方形</option>
+        <option value="triangle">三角形</option>
+        <option value="cross">叉叉</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">顏色：</label>
+      <input type="color" id="line_color" class="form-control form-control-color" value="#007bff">
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <label class="form-label">圖例名稱（可自訂，留白用預設）：</label>
+    <input type="text" id="legend_name" class="form-control" placeholder="例：平均時間、銷售量等">
+  </div>
+
+  <div class="mt-4">
+    <button id="draw-btn" class="btn btn-success">🎨 繪製圖表</button>
+    <button id="download-btn" class="btn btn-outline-secondary ms-2">💾 下載圖表 (PNG)</button>
+  </div>
+
+  <h5 class="mt-4">📋 資料預覽：</h5>
+  <div class="table-responsive">
+    {{ preview|safe }}
+  </div>
+
+  <canvas id="chart" class="mt-4"></canvas>
+  {% endif %}
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const chartCanvas = document.getElementById('chart');
+    let myChart = null;
+
+    document.getElementById("draw-btn")?.addEventListener("click", (e) => {
+      e.preventDefault();
+
+      const xCol = document.getElementById("x_col").value;
+      const yCols = [...document.querySelectorAll(".y-check:checked")].map(c => c.value);
+      const xLabel = document.getElementById("x_label").value || xCol;
+      const yLabel = document.getElementById("y_label").value || yCols.join(", ");
+      const lineStyle = document.getElementById("line_style").value;
+      const pointStyle = document.getElementById("point_style").value;
+      const color = document.getElementById("line_color").value;
+      const legendName = document.getElementById("legend_name").value || "圖表";
+
+      if (yCols.length === 0) {
+        alert("請至少選擇一個 Y 軸欄位！");
+        return;
+      }
+
+      const labels = Array.from({length: 10}, (_, i) => i + 1);
+      const data = labels.map(() => Math.floor(Math.random() * 10));
+
+      if (myChart) myChart.destroy();
+
+      myChart = new Chart(chartCanvas, {
+        type: "line",
+        data: {
+          labels,
+          datasets: yCols.map((col, i) => ({
+            label: legendName + " - " + col,
+            data: data.map(v => v + i * 2),
+            borderColor: color,
+            borderWidth: 2,
+            borderDash: lineStyle === "dashed" ? [6, 6] : lineStyle === "dotted" ? [2, 3] : [],
+            pointStyle: pointStyle,
+            pointRadius: 4,
+            backgroundColor: color,
+            fill: false
+          }))
+        },
+        options: {
+          plugins: {
+            legend: { position: "top" },
+            tooltip: { enabled: true }
+          },
+          scales: {
+            x: { title: { display: true, text: xLabel } },
+            y: { title: { display: true, text: yLabel }, beginAtZero: true }
+          }
+        }
+      });
+    });
+
+    // 白底下載
+    document.getElementById("download-btn")?.addEventListener("click", () => {
+      const link = document.createElement('a');
+      const whiteCanvas = document.createElement('canvas');
+      const ctx = whiteCanvas.getContext('2d');
+      whiteCanvas.width = chartCanvas.width;
+      whiteCanvas.height = chartCanvas.height;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, whiteCanvas.width, whiteCanvas.height);
+      ctx.drawImage(chartCanvas, 0, 0);
+      link.download = 'chart.png';
+      link.href = whiteCanvas.toDataURL();
+      link.click();
+    });
+  </script>
+
+</body>
+</html>
+

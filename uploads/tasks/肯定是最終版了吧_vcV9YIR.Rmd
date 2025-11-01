@@ -1,0 +1,1667 @@
+---
+title: "計算統計與機率期中報告最終版"
+date: "2025-05-23"
+author: "411278021沙宸安"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+  word_document:
+    toc: yes
+    toc_depth: '3'
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+    latex_engine: xelatex
+runtime: shiny
+---
+
+# 1.前言
+
+本報告探討在重複投擲銅板的隨機試驗中，已知總共出現 5次正面的前提下，對部分投擲結果進行條件機率推論的問題。
+這類問題可應用條件機率的原理進行分析，並透過模擬方法進一步驗證理論推導的正確性與穩定性。
+
+本報告使用的統計與機率理論包括:
+
+- 條件機率
+- 大數法則
+- 中央極限定理
+- 蒙地卡羅模擬（Monte Carlo Simulation）
+- 常態性檢定(Shapiro-Wilk、KS test)
+
+# 2.題目
+
+投擲銅板 10 次，得 5 個正面，求解以下條件機率：
+
+(i) 第一次得到正面
+
+(ii) 首五次恰得 3 個正面
+
+# 3.理論
+
+## 理論機率計算
+
+(i) 第一次得到正面
+
+條件機率：  
+\[
+P(\text{第一次正面} \mid \text{總共得 5 個正面}) = 0.5
+\]
+
+變異數計算：  
+\[
+\text{Var}(X) = p(1 - p) = 0.5 \times (1 - 0.5) = 0.25
+\]
+
+標準差計算：  
+\[
+\text{SD}(X) = \sqrt{\text{Var}(X)} = \sqrt{0.25} = 0.5
+\]
+
+(ii) 首五次恰得三個正面
+
+條件機率：  
+\[
+P(\text{前5次得 3 正面} \mid \text{總共得 5 正面}) = 0.3968
+\]
+
+變異數計算：  
+\[
+\text{Var}(Y) = p(1 - p) = 0.3968 \times (1 - 0.3968) \approx 0.2395
+\]
+
+標準差計算：  
+\[
+\text{SD}(Y) = \sqrt{\text{Var}(Y)} = \sqrt{0.2395} \approx 0.4886
+\]
+
+結論:
+
+1. 第一次得到正面的條件機率是 \( 0.5 \)。
+2. 首五次恰得 3 個正面的條件機率是 \( 0.3968 \)。
+
+
+## 理論機率分布
+
+
+(i)-伯努利分布
+
+
+伯努利分布（Bernoulli distribution）
+
+伯努利分布，又名兩點分布或者0-1分布，是一個離散型機率分布。
+
+若伯努利試驗成功，則伯努利隨機變數取值為 1；若失敗，則取值為0。
+
+記成功機率為 $p$（$0 \leq p \leq 1$），失敗機率為 $q = 1 - p$。
+
+- 機率質量函數（PMF）
+
+伯努利分布的機率質量函數為：
+
+$$
+f_X(x) = p^x (1 - p)^{1 - x} = 
+\begin{cases} 
+p & \text{if } x = 1, \\\\
+1 - p & \text{if } x = 0.
+\end{cases}
+$$
+
+- 期望值
+
+$$
+\mathbb{E}[X] = \sum_{i=0}^{1} x_i f_X(x_i) = 0 \cdot (1 - p) + 1 \cdot p = p
+$$
+
+- 變異數
+
+$$
+\operatorname{Var}(X) = \sum_{i=0}^{1} (x_i - \mathbb{E}[X])^2 f_X(x_i) 
+= (0 - p)^2 (1 - p) + (1 - p)^2 p 
+= p(1 - p) = pq
+$$
+
+(ii)-超幾何分布
+
+超幾何分布（Hypergeometric Distribution）
+
+超幾何分布是一種離散型機率分布，用來描述在**有限個物件中不重複抽取樣本**的情況下，特定類別物件出現的次數。
+
+這種分布的典型應用情境是：在不放回的抽樣中，從一個包含兩類元素的有限母體中，抽取若干樣本，觀察其中某類的數量。
+
+- 定義
+
+若母體大小為 $N$，其中有 $K$ 個成功（某特定類別）物件，其餘 $N-K$ 個為失敗物件，從中不放回抽取 $n$ 個樣本，則 $X$ 表示抽中成功物件的數量。此時 $X$ 服從參數為 $(N, K, n)$ 的超幾何分布，記為：
+
+$$
+X \sim \text{Hypergeometric}(N, K, n)
+$$
+
+- 機率質量函數（PMF）
+
+$$
+P(X = k) = \frac{{\binom{K}{k} \binom{N - K}{n - k}}}{{\binom{N}{n}}}, \quad \max(0, n - (N-K)) \leq k \leq \min(n, K)
+$$
+
+其中：
+
+$N$：母體總數
+
+$K$：母體中成功的數目  
+
+$n$：抽樣數  
+
+$k$：抽中成功數的機率
+
+- 期望值（Expected Value）
+
+$$
+\mathbb{E}[X] = n \cdot \frac{K}{N}
+$$
+
+- 變異數（Variance）
+
+$$
+\operatorname{Var}(X) = n \cdot \frac{K}{N} \cdot \left(1 - \frac{K}{N} \right) \cdot \frac{N - n}{N - 1}
+$$
+
+這裡的 
+
+$$ \frac{N - n}{N - 1} $$
+
+為修正項，反映了**不放回抽樣**與獨立抽樣的差異。
+
+## n還是n-1
+
+樣本變異數公式
+
+當我們要估計母體變異數 \( \sigma^2 \) 時，常用的樣本變異數公式是：
+
+\[
+s^2 = \frac{1}{n - 1} \sum_{i=1}^{n} (x_i - \bar{x})^2
+\]
+
+其中：
+
+- \( x_i \)：第 i 個樣本  
+- \( \bar{x} \)：樣本平均數  
+- \( n \)：樣本數  
+
+而不是這個容易低估變異數的公式：
+
+\[
+\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2
+\]
+
+因為這個版本會低估母體變異數，屬於 **有偏估計（biased estimator）**。
+
+這些公式無論母體是否為常態分佈，只要變異數存在（有限），使用 \( \frac{1}{n - 1} \) 的公式就是 \( \sigma^2 \) 的 **無偏估計量（unbiased estimator）**。
+
+- 除以 𝑛−1是統計學中的無偏估計方法，通常被認為更為準確，尤其是在估計母體變異數時。
+
+- 除以 𝑛通常是用於描述樣本變異性，不適用於母體估計，因為它有偏差。
+
+### 圖
+
+我們以第一小題的模擬結果作為母體（模擬出來的資料，不一定常態），進行重複抽樣，分別使用除以 n 和 n−1 的方式估計變異數，觀察哪一種更接近母體變異數。
+
+母體變異數的理論值可以根據 Bernoulli 分布的公式：
+
+\[
+\text{Var}(Y) = p(1 - p) = 0.3968 \times (1 - 0.3968) \approx 0.2395
+\]
+
+
+
+<small>
+
+公式由來:
+
+期望值 (Mean)
+
+對於服從 Bernoulli 分布的隨機變數 \( Y \)，其可能的取值為 0 或 1，其中：
+
+- \( Y = 1 \) 表示成功，機率為 \( p \)
+- \( Y = 0 \) 表示失敗，機率為 \( 1 - p \)
+
+期望值 \( E[Y] \) 的計算如下：
+
+\[
+E[Y] = 0 \cdot (1 - p) + 1 \cdot p = p
+\]
+
+ 變異數 (Variance) 公式
+
+變異數的定義為：
+
+\[
+\text{Var}(Y) = E[(Y - E[Y])^2] = E[Y^2] - (E[Y])^2
+\]
+
+由於 \( Y \) 只有 0 和 1 兩個可能值，且 \( Y^2 = Y \)（因為 \( 0^2 = 0 \) 且 \( 1^2 = 1 \)），我們有：
+
+\[
+E[Y^2] = E[Y] = p
+\]
+
+因此變異數為：
+
+\[
+\text{Var}(Y) = p - p^2 = p(1 - p)
+\]
+
+所以，Bernoulli 分布的變異數為：
+
+\[
+\boxed{\text{Var}(Y) = p(1 - p)}
+\]
+
+</small>
+
+
+
+每次抽一組樣本（例如大小 30），計算：
+
+- 除以 n 的變異數
+
+- 除以 n−1 的變異數
+
+重複很多次（例如 1000 次）
+
+```{r}
+set.seed(1234)
+
+# 模擬參數
+n_sim <- 10000        # 模擬次數
+sample_size <- 100    # 每次樣本大小
+p <- 0.4              # Bernoulli 成功機率（例如正面機率）
+
+# 母體變異數
+true_var <- p * (1 - p)
+
+# 建立資料框儲存變異數結果
+sim_vars <- data.frame(var_n = numeric(n_sim), var_n1 = numeric(n_sim))
+
+# 執行模擬
+for (i in 1:n_sim) {
+  sample_data <- rbinom(sample_size, 1, p)
+  sample_mean <- mean(sample_data)
+
+  # 樣本變異數（除以 n）
+  sim_vars$var_n[i] <- mean((sample_data - sample_mean)^2)
+
+  # 樣本變異數（除以 n - 1）—— R 預設
+  sim_vars$var_n1[i] <- var(sample_data)
+}
+
+# 計算平均與 MSE
+mean_var_n <- mean(sim_vars$var_n)
+mean_var_n1 <- mean(sim_vars$var_n1)
+
+mse_n <- mean((sim_vars$var_n - true_var)^2)
+mse_n1 <- mean((sim_vars$var_n1 - true_var)^2)
+
+# 顯示數據
+cat("母體變異數：", round(true_var, 5), "\n")
+cat("樣本變異數 (除以 n) 平均值     :", round(mean_var_n, 5), "\n")
+cat("樣本變異數 (除以 n-1) 平均值   :", round(mean_var_n1, 5), "\n")
+cat("與母體變異數的 MSE (除以 n)   :", round(mse_n, 6), "\n")
+cat("與母體變異數的 MSE (除以 n-1) :", round(mse_n1, 6), "\n")
+
+# 繪圖比較
+hist(sim_vars$var_n1,
+     breaks = 30,
+     col = rgb(0.2, 0.4, 0.6, 0.5),
+     xlim = range(c(sim_vars$var_n, sim_vars$var_n1)),
+     ylim = c(0, max(hist(sim_vars$var_n1, plot = FALSE)$counts) * 1.2),
+     main = "樣本變異數估計比較（n vs n-1）",
+     xlab = "樣本變異數值")
+
+# 疊加除以 n 的變異數直方圖
+hist(sim_vars$var_n,
+     breaks = 30,
+     col = rgb(1, 0.3, 0.3, 0.5),
+     add = TRUE)
+
+# 母體變異數虛線
+abline(v = true_var, col = "darkgreen", lwd = 3, lty = 2) # 母體變異數
+abline(v = mean_var_n, col = "red", lwd = 2, lty = 3)     # n 平均
+abline(v = mean_var_n1, col = "blue", lwd = 2, lty = 3)   # n-1 平均
+# 圖例
+legend("topright",
+       legend = c("樣本變異數（除以 n-1）", "樣本變異數（除以 n）",
+                  "母體變異數", "n 平均", "n-1 平均"),
+       fill = c(rgb(0.2, 0.4, 0.6, 0.5), rgb(1, 0.3, 0.3, 0.5), NA, NA, NA),
+       border = NA,
+       lty = c(NA, NA, 2, 3, 3),
+       lwd = c(NA, NA, 2, 2, 2),
+       col = c(NA, NA, "darkgreen", "red", "blue"),
+       bty = "n",
+       cex=0.8)
+
+```
+
+這張圖的功能
+
+- 計算與母體變異數的平均差距與 MSE（均方誤差）。
+
+- 畫出兩種變異數估計的直方圖，並標示母體變異數的參考線。
+
+### 結論
+
+- 除以 n−1 的變異數通常會更接近母體變異數，這是因為它是一個無偏估計，對於小樣本來說能夠更準確地估計母體的變異數。
+
+- 除以 n 的變異數則是有偏的，它傾向於低估母體變異數，但隨著樣本數增加，這個偏差會減小，並且當樣本數非常大時，兩者的差異會非常小。
+
+
+# 4.flowchat
+
+```{r echo=FALSE}
+library(DiagrammeR)
+grViz("
+digraph simulation_analysis {
+
+  graph [rankdir = TB, layout = dot]
+
+  node [shape = box, style = filled, fillcolor = lightblue, fontname = Helvetica]
+
+  開始 [label = '1. 開始：模擬設計']
+  理論機率 [label = '2. 理論機率計算']
+  相對頻率 [label = '3. 生成相對頻率']
+  比較理論 [label = '4. 理論機率與\n相對頻率比較']
+  差異大 [label = '差異大？', shape = diamond, style = filled, fillcolor = lightyellow]
+  顯著差異檢定 [label = '5. 使用 K-S test 與 MSE\n檢查是否顯著差異']
+  顯著性 [label = '顯著差異？', shape = diamond, style = filled, fillcolor = lightyellow]
+  確認分布 [label = '6. 確認模擬分布形態']
+  計算樣本數 [label = '7. 計算所需樣本數']
+  shiny建置 [label = '8. 建立 Shiny App']
+  結束 [label = '結束']
+
+  開始 -> 理論機率
+  理論機率 -> 相對頻率
+  相對頻率 -> 比較理論
+  比較理論 -> 差異大
+  差異大 -> 相對頻率 [label = '是']
+  差異大 -> 顯著差異檢定 [label = '否']
+  顯著差異檢定 -> 顯著性
+  顯著性 -> 相對頻率 [label = '是']
+  顯著性 -> 確認分布 [label = '否']
+  確認分布 -> 計算樣本數
+  計算樣本數 -> shiny建置
+  shiny建置 -> 結束
+}
+")
+```
+
+# 5.開始
+
+## 生成相對頻率
+
+```{r}
+set.seed(1234)
+# 設置模擬次數
+n_simulations <- 50000
+
+# 用來存儲結果的數據框
+results <- data.frame(
+  p_i = numeric(n_simulations),
+  p_ii = numeric(n_simulations)
+)
+
+# 理論值
+t_p_i <- 0.5
+t_p_ii<- 0.3968
+
+# 執行模擬
+for (i in 1:n_simulations) {
+  
+  # 隨機生成 10 次投擲，1 代表正面，0 代表反面
+  tosses <- sample(c(0, 1), size = 10, replace = TRUE)
+  
+  # 檢查是否總共得 5 個正面
+  if (sum(tosses) == 5) {
+    
+    # (i) 第一次得到正面的條件機率
+    p_i <- if (tosses[1] == 1) 1 else 0
+    
+    # (ii) 首五次恰得 3 個正面的條件機率
+    p_ii <- if (sum(tosses[1:5]) == 3) 1 else 0
+    
+    # 保存模擬結果
+    results$p_i[i] <- p_i
+    results$p_ii[i] <- p_ii
+  } else {
+    # 如果總共不是 5 個正面，則跳過此次模擬
+    results$p_i[i] <- NA
+    results$p_ii[i] <- NA
+  }
+}
+
+# 計算比例，即條件事件的發生頻率
+proportion_i <- mean(results$p_i, na.rm = TRUE)
+proportion_ii <- mean(results$p_ii, na.rm = TRUE)
+
+# 顯示比例結果
+cat("第一次得到正面的條件機率的比例是", proportion_i, "\n")
+cat("首五次恰得 3 個正面的條件機率的比例是", proportion_ii, "\n")
+```
+
+## MSE
+
+```{r}
+set.seed(1234)
+# 理論值
+t_p_i <- 0.5
+t_p_ii <- 0.3968
+
+# 計算均方誤差 (MSE)
+mse_p_i <- (proportion_i - t_p_i)^2
+mse_p_ii <- (proportion_ii - t_p_ii)^2
+
+# 顯示 MSE 結果
+cat("第一次得到正面的條件機率的 MSE 是", mse_p_i, "\n")
+cat("首五次恰得 3 個正面的條件機率的 MSE 是", mse_p_ii, "\n")
+```
+
+MSE:用來衡量誤差的大小，通常用於模型的性能評估。
+
+均方誤差 (MSE) 結果：
+
+- 第一次得到正面的條件機率的 MSE 是 1.086942e-05
+
+這個 MSE 值非常小，說明模擬結果與理論值之間的差異很小。
+
+- 首五次恰得 3 個正面的條件機率的 MSE 是  4.849785e-05 
+
+同樣，這個 MSE 值也很小，顯示模擬結果和理論值之間的差異也很小。
+
+## k-s test
+
+KS檢定（Kolmogorov-Smirnov檢驗，簡稱KS檢定）是一種非參數統計檢定方法，主要用於比較兩個分佈之間的方差，常見的兩種用途是：
+
+1.單樣本KS檢定
+
+用於檢定樣本是否來自某種特定分配（如常態分配、均勻分配等）。
+
+用途：檢驗資料是否服從某個理論分配。
+
+例：判斷一個樣本是否來自常態分佈。
+
+2.雙樣本KS檢定
+
+用於比較兩個樣本是否來自同一個分佈。
+
+用途：比較兩個資料集的分佈變異數。
+
+範例：比較A組和B組使用者的行為數據是否來自相同的分佈。
+
+```{r}
+# 移除 NA
+sim_i <- na.omit(results$p_i)
+sim_ii <- na.omit(results$p_ii)
+
+# 理論值（轉為固定機率分佈）
+# 模擬一個相同長度的理論分佈（伯努利分佈）
+theoretical_i <- rbinom(length(sim_i), size = 1, prob = t_p_i)
+theoretical_ii <- rbinom(length(sim_ii), size = 1, prob = t_p_ii)
+
+# 執行 K-S 檢定
+ks_result_i <- ks.test(sim_i, theoretical_i)
+ks_result_ii <- ks.test(sim_ii, theoretical_ii)
+
+# 顯示結果
+cat("K-S test for p_i:\n")
+print(ks_result_i)
+
+cat("\nK-S test for p_ii:\n")
+print(ks_result_ii)
+
+length(sim_i)  # 查看 sim_i 的樣本數
+length(sim_ii) # 查看 sim_ii 的樣本數
+
+
+```
+
+- D ：模擬資料的經驗分佈函數與理論資料之間的最大距,D 值越小，表示分佈越相似。
+
+- p 值 ：較高的 p 值（通常 > 0.05）表示兩個分佈之間沒有統計上的顯著差異。
+
+*(i)*
+
+D = 0.0016886, p-value = 1
+
+差異（D）非常小，表示模擬與理論非常接近。
+
+p-value = 1 代表沒有足夠證據拒絕兩者分布相同的假設 → 模擬與理論分布一致。
+
+*(ii)*
+
+D = 0.0046639, p-value = 0.9993
+
+差異也非常小。
+
+p-value ≈ 0.9993 代表沒有足夠證據拒絕兩者分布相同的假設 → 模擬與理論分布一致。
+
+## 大數法則
+
+英語：Law of large numbers:
+
+又稱大數定律、大數律，是描述相當多次數重複實驗的結果的法則。
+
+根據這個法則知道，樣本數量越多，則其算術平均值就有越高的機率接近期望值。
+
+
+## 收斂圖
+
+```{r}
+set.seed(1234)
+
+# 模擬參數
+n <- 500  # 每次模擬最大有效樣本數
+n_trials <- 100  # 重複模擬幾次（即疊幾條線）
+
+# 理論值
+t_p_i <- 0.5
+t_p_ii <- 0.3968
+
+# 建立畫布
+plot(0, type = "n", ylim = c(0.2, 0.8), xlim = c(0, n), xlab = "有效模擬次數", ylab = "條件機率估計")
+abline(h = t_p_i, lwd = 2, col = "#1b9e7780")   # p_i 理論值
+abline(h = t_p_ii, lwd = 2, col = "#d95f0280")  # p_ii 理論值
+
+# 模擬疊圖
+for (k in 1:n_trials) {
+  count_i <- 0
+  count_ii <- 0
+  count_valid <- 0
+  ds_i <- NULL
+  ds_ii <- NULL
+  
+  while (count_valid < n) {
+    tosses <- sample(c(0, 1), size = 10, replace = TRUE)
+    if (sum(tosses) == 5) {
+      count_valid <- count_valid + 1
+      count_i <- count_i + as.integer(tosses[1] == 1)
+      count_ii <- count_ii + as.integer(sum(tosses[1:5]) == 3)
+      ds_i <- rbind(ds_i, c(count_valid, count_i / count_valid))
+      ds_ii <- rbind(ds_ii, c(count_valid, count_ii / count_valid))
+    }
+  }
+  
+  # 畫出模擬線
+  lines(ds_i, type = "l", col = "#1b9e7740")   # 綠色透明
+  lines(ds_ii, type = "l", col = "#d95f0240")  # 橘色透明
+}
+
+# 圖例
+legend("topright", legend = c("p_i: 第一次正面", "p_ii: 前5次有3正面"),
+       col = c("#1b9e77", "#d95f02"), lwd = 2, bty = "n",cex = 0.7)
+
+```
+
+## 累積平均圖
+
+```{r}
+# 去除 NA，計算累積平均
+valid_p_i <- na.omit(results$p_i)
+valid_p_ii <- na.omit(results$p_ii)
+
+cumulative_p_i <- cumsum(valid_p_i) / seq_along(valid_p_i)
+cumulative_p_ii <- cumsum(valid_p_ii) / seq_along(valid_p_ii)
+
+# 畫圖
+par(mfrow=c(2,1), mai=c(0.8, 0.8, 0.2, 0.1))
+
+# (i) 第一枚為正面
+plot(cumulative_p_i, type="l", col="#1b9e77", ylim=c(0.4, 0.6),
+     xlab="模擬次數", ylab="累積比例", main="(i) 第一枚為正面的條件機率")
+abline(h=t_p_i, col="red", lty=2)
+abline(h = t_p_i + 0.01, col = "gray", lty = 3)
+
+# (ii) 前五次中有三個正面
+plot(cumulative_p_ii, type="l", col= "#d95f02", ylim=c(0.35, 0.45),
+     xlab="模擬次數", ylab="累積比例", main="(ii) 前五次有三正面的條件機率")
+abline(h=t_p_ii, col="red", lty=2)
+
+abline(h = t_p_i + 0.01, col = "gray", lty = 3)
+
+```
+
+## Box Plot
+
+Box plot 是用來顯示連續變數的分布（包含中位數、四分位數、異常值等）
+
+而目前的資料（p_i 和 p_ii）是 0 或 1 的離散變數（伯努利型）
+
+要怎麼用 Box Plot 呈現「相對頻率」？
+
+將模擬分成多組（例如每 500 筆一組），計算每組的平均（即相對頻率），再對這些平均值做 box plot。
+
+```{r}
+
+# 分組的函數：每 group_size 筆為一組
+group_relative_freq <- function(x, group_size = 500) {
+  x <- na.omit(x)
+  groups <- split(x, ceiling(seq_along(x) / group_size))
+  sapply(groups, mean)
+}
+
+# 計算每組的相對頻率
+group_freq_p_i <- group_relative_freq(results$p_i)
+group_freq_p_ii <- group_relative_freq(results$p_ii)
+
+# 畫出 Box Plot
+boxplot(group_freq_p_i, group_freq_p_ii,
+        names = c("p_i", "p_ii"),
+        col = c("#1b9e77", "#d95f02"),
+        main = "每組模擬的相對頻率 Box Plot",
+        ylab = "相對頻率",
+        ylim = c(0.3, 0.6))
+
+# 加上理論值線
+abline(h = t_p_i, col = "#1b9e77", lty = 2, lwd = 2)
+abline(h = t_p_ii, col = "#d95f02", lty = 2, lwd = 2)
+
+legend("topright", 
+       legend = c("理論值 p_i = 0.5", "理論值 p_ii ≈ 0.3968"), 
+       col = c("#1b9e77", "#d95f02"), 
+       lty = 2, 
+       lwd = 2, 
+       bty = "n", 
+       cex = 0.8)
+
+```
+
+## 檢定(i)的模擬是否符合Bernoulli 分布
+
+```{r}
+# 去除 NA，保留符合條件的樣本
+p_i_values <- na.omit(results$p_i)
+
+# 用擬合測試檢定是否為 Bernoulli 分布
+# 預期機率由模擬估計
+p_hat <- mean(p_i_values)
+
+# 建立觀察值與期望值
+obs <- table(p_i_values)
+exp <- c((1 - p_hat) * length(p_i_values), p_hat * length(p_i_values))
+
+# 卡方檢定
+chisq.test(obs, p = exp / sum(exp))
+
+```
+
+- X-squared = 1.3216e-28：卡方統計值非常接近 0，表示觀察值與期望值幾乎完全相同。
+
+- df = 1：自由度為 1，因為是 Bernoulli 分布，只有兩個可能的類別（0 與 1）。
+
+- p-value = 1：極高的 p 值  表示你觀察到的資料和理論（Bernoulli）分布完全吻合，沒有理由拒絕虛無假設。
+
+結論：
+模擬出來的 p_i（第一次為正面，條件在總共 5 正面之下）可以視為來自 Bernoulli 分布，模擬結果與理論吻合得非常好。
+
+## 檢定 (ii) 的模擬是否符合超幾何分布
+
+```{r}
+set.seed(1234)
+n_simulations <- 50000
+front_5_heads <- c()
+
+for (i in 1:n_simulations) {
+  # 在 10 個位置中隨機選出 5 個放 1（代表正面），其餘是 0
+  toss <- rep(0, 10)
+  toss[sample(1:10, 5, replace = FALSE)] <- 1
+  
+  # 計算前五次中的正面個數
+  heads_in_first_5 <- sum(toss[1:5])
+  front_5_heads <- c(front_5_heads, heads_in_first_5)
+}
+
+# 建立觀察值分布
+obs_counts <- table(factor(front_5_heads, levels = 0:5))
+
+# 理論超幾何機率
+# 總體 N = 10，正面 K = 5，抽樣 n = 5
+theoretical_probs <- dhyper(0:5, m = 5, n = 5, k = 5)
+
+# 卡方檢定
+chisq.test(x = obs_counts, p = theoretical_probs)
+```
+
+
+- X-squared = 3.0753：模擬結果與理論期望之間的總偏差程度。
+
+- df = 5：自由度等於觀察類別數 - 1。
+
+- p-value = 0.6884：這是一個很高的 p 值。
+
+結論：
+
+由於 p 值遠大於常見的顯著水準（例如 0.05 或 0.01）：
+
+你沒有足夠證據拒絕「模擬結果服從超幾何分布」的假設。
+
+換句話說，模擬結果和理論超幾何分布吻合良好，支持你原先的判斷：
+
+(ii) 是超幾何分布的實現結果。
+
+模擬分布 vs 超幾何理論分布
+```{r}
+# 載入繪圖套件
+library(ggplot2)
+
+# 整理資料框
+df <- data.frame(
+  Heads_in_First5 = 0:5,
+  Simulated = as.numeric(obs_counts) / sum(obs_counts),
+  Theoretical = dhyper(0:5, m = 5, n = 5, k = 5)
+)
+
+# 長格式轉換，方便 ggplot2 使用
+df_long <- reshape2::melt(df, id.vars = "Heads_in_First5", 
+                          variable.name = "Type", value.name = "Probability")
+
+# 繪製條形圖
+ggplot(df_long, aes(x = factor(Heads_in_First5), y = Probability, fill = Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("skyblue", "orange")) +
+  labs(title = "模擬 vs 超幾何理論分布",
+       x = "前五次正面個數", y = "機率",
+       fill = "分布來源") +
+  theme_minimal()
+
+```
+
+## 計算所需的樣本數
+
+```{r}
+
+set.seed(1234)
+# 設置模擬次數
+n_simulations <- 50000
+
+# 用來存儲結果的數據框
+results <- data.frame(
+  p_i = numeric(n_simulations),
+  p_ii = numeric(n_simulations)
+)
+
+# 理論值
+t_p_i <- 0.5
+t_p_ii<- 0.3968
+
+# 執行模擬
+for (i in 1:n_simulations) {
+  
+  # 隨機生成 10 次投擲，1 代表正面，0 代表反面
+  tosses <- sample(c(0, 1), size = 10, replace = TRUE)
+  
+  # 檢查是否總共得 5 個正面
+  if (sum(tosses) == 5) {
+    
+    # (i) 第一次得到正面的條件機率
+    p_i <- if (tosses[1] == 1) 1 else 0
+    
+    # (ii) 首五次恰得 3 個正面的條件機率
+    p_ii <- if (sum(tosses[1:5]) == 3) 1 else 0
+    
+    # 保存模擬結果
+    results$p_i[i] <- p_i
+    results$p_ii[i] <- p_ii
+  } else {
+    # 如果總共不是 5 個正面，則跳過此次模擬
+    results$p_i[i] <- NA
+    results$p_ii[i] <- NA
+  }
+}
+
+# 計算比例，即條件事件的發生頻率
+proportion_i <- mean(results$p_i, na.rm = TRUE)
+proportion_ii <- mean(results$p_ii, na.rm = TRUE)
+
+# 顯示比例結果
+cat("第一次得到正面的條件機率的比例是", proportion_i, "\n")
+cat("首五次恰得 3 個正面的條件機率的比例是", proportion_ii, "\n")
+
+set.seed(1234)
+# 計算所需樣本數
+# 假設容忍度 E 為 0.01，並且使用 95% 信賴水準 (Z 值為 1.96)
+
+E <- 0.01  # 容忍度
+Z <- 1.96  # 95% 信賴水準的 Z 值
+
+# 根據模擬結果來估算比例 (p)
+p1 <- proportion_i
+p2 <- proportion_ii
+
+# 計算樣本數
+n_needed1 <- (Z^2 * p1 * (1 - p1)) / E^2
+n_needed2 <- (Z^2 * p2 * (1 - p2)) / E^2
+
+# 顯示樣本數結果
+cat("估算第一次是正面的條件機率所需的樣本數是", ceiling(n_needed1), "\n")
+cat("估算前五次中恰有三個正面的條件機率所需的樣本數是", ceiling(n_needed2), "\n")
+
+```
+
+在樣本數推算中，我們使用以下公式來計算所需的樣本數：
+
+\[
+n = \frac{Z^2 \cdot p \cdot (1 - p)}{E^2}
+\]
+
+其中：
+
+- **n** 是所需的樣本數。
+- **Z** 是對應於所選信賴水準的 Z 值（例如，對於 95% 的信賴水準，Z 值為 1.96）。
+- **p** 是預估的比例，可以基於模擬結果來計算。
+- **E** 是容忍度或誤差範圍（例如，允許的最大誤差為 0.01）。
+
+### 公式解釋
+
+1. **誤差範圍 (E)**：設定誤差範圍為您可接受的最大誤差。例如，若允許的最大誤差為 0.01，則 E = 0.01。
+
+2. **信賴水準 (Z)**：信賴水準通常為 95% 或 99%。對於 95% 的信賴水準，Z 值為 1.96；對於 99% 的信賴水準，Z 值為 2.576。
+
+3. **比例 (p)**：根據您的模擬結果來估算比例，這裡的 **p** 是您從模擬中計算出的比例。
+
+### 不同的模擬次數圖
+
+(i)
+
+```{r}
+set.seed(1234)
+simulation_sizes <- c(100, 500, 1000, 5000, 10000,50000)
+mean_results <- numeric(length(simulation_sizes))
+
+for (j in seq_along(simulation_sizes)) {
+  n <- simulation_sizes[j]
+  sim_vals <- numeric(n)  # 儲存每次模擬的結果
+  count <- 0
+  
+  while (count < n) {
+    tosses <- sample(c(0, 1), size = 10, replace = TRUE)
+    if (sum(tosses) == 5) {
+      count <- count + 1
+      sim_vals[count] <- ifelse(tosses[1] == 1, 1, 0)
+    }
+  }
+  
+  mean_results[j] <- mean(sim_vals)
+}
+
+# 繪圖
+plot(simulation_sizes, mean_results, type = "b", col = "blue", pch = 16,
+     main = "模擬次數對平均估計值的影響（第一次為正面）",
+     xlab = "模擬次數", ylab = "平均條件機率")
+abline(h = 0.5, col = "red", lty = 2)  # 理論值
+
+```
+
+(ii)
+
+```{r}
+set.seed(1234)
+# 不同的模擬次數設定
+simulation_sizes <- c(100, 500, 1000, 5000, 10000,50000)
+mean_results_3in5 <- numeric(length(simulation_sizes))
+
+# 執行模擬
+for (j in seq_along(simulation_sizes)) {
+  n <- simulation_sizes[j]
+  sim_vals <- numeric(n)
+  count <- 0
+  
+  while (count < n) {
+    tosses <- sample(c(0, 1), size = 10, replace = TRUE)
+    if (sum(tosses) == 5) {
+      count <- count + 1
+      sim_vals[count] <- ifelse(sum(tosses[1:5]) == 3, 1, 0)
+    }
+  }
+  
+  mean_results_3in5[j] <- mean(sim_vals)
+}
+
+# 畫出結果趨勢圖
+plot(simulation_sizes, mean_results_3in5, type = "b", col = "purple", pch = 16,
+     main = "模擬次數對平均估計值的影響（前五次剛好 3 個正面）",
+     xlab = "模擬次數", ylab = "平均條件機率")
+abline(h = 0.3968, col = "red", lty = 2)  # 理論值
+
+```
+
+## shiny
+
+可以輸入
+
+- 每次模擬最大有效樣本數 (n)
+- 重複模擬次數 (n_trials)
+- 每次擲投總次數 (N)
+- 銅板正面的機率 (p)
+- 每次擲投中正面數量須為 (K)
+- 檢查前幾次投擲 (flips_to_check)
+- 期望在前幾次中正面次數 (expected_heads)
+
+```{r echo=FALSE}
+library(shiny)
+library(ggplot2)
+
+ui <- fluidPage(
+  titlePanel("銅板擲投模擬 - 條件機率與視覺化"),
+
+  sidebarLayout(
+    sidebarPanel(
+      numericInput("n", "每次模擬最大有效樣本數 (n):", value = 500, min = 10),
+      numericInput("n_trials", "重複模擬次數 (n_trials):", value = 100, min = 1),
+      numericInput("total_flips", "每次擲投總次數 (N):", value = 10, min = 1, max = 100),
+      numericInput("p", "銅板正面的機率 (p):", value = 0.5, min = 0, max = 1),
+      numericInput("heads", "每次擲投中正面數量須為 (K):", value = 5, min = 0),
+      numericInput("flips_to_check", "檢查前幾次投擲:", value = 5, min = 1),
+      numericInput("expected_heads", "期望在前幾次中正面次數:", value = 3, min = 0),
+      actionButton("runSim", "開始模擬", class = "btn-primary")
+    ),
+
+    mainPanel(
+      tabsetPanel(
+        tabPanel("模擬與理論機率", 
+                 plotOutput("freqPlot"),
+                 verbatimTextOutput("theoryText")),
+        tabPanel("MSE與K-S測試", verbatimTextOutput("testOutput")),
+        tabPanel("累積平均值", plotOutput("cumulativePlot")),
+        tabPanel("Box Plot", plotOutput("boxPlot"))
+      ),
+      br(),
+      uiOutput("progress_ui")
+    )
+  )
+)
+
+server <- function(input, output, session) {
+
+  simulate_coin_toss <- eventReactive(input$runSim, {
+    n <- input$n
+    n_trials <- input$n_trials
+    p <- input$p
+    target_heads <- input$heads
+    flips_to_check <- input$flips_to_check
+    expected_heads <- input$expected_heads
+    N_total <- input$total_flips
+
+    all_ds_conditional <- list()
+
+    withProgress(message = '模擬中...', value = 0, {
+      for (k in 1:n_trials) {
+        count_conditional <- 0
+        count_valid <- 0
+        ds_conditional <- NULL
+
+        while (count_valid < n) {
+          tosses <- rbinom(N_total, 1, p)
+          if (sum(tosses) == target_heads) {
+            count_valid <- count_valid + 1
+            count_conditional <- count_conditional + as.integer(sum(tosses[1:flips_to_check]) == expected_heads)
+            ds_conditional <- rbind(ds_conditional, c(count_valid, count_conditional / count_valid))
+          }
+        }
+        all_ds_conditional[[k]] <- ds_conditional
+        incProgress(1 / n_trials)
+      }
+    })
+
+    all_ds_conditional
+  })
+
+  output$freqPlot <- renderPlot({
+    sim <- simulate_coin_toss()
+    req(sim)
+    n <- input$n
+
+    theory <- dhyper(input$expected_heads, input$heads,
+                     input$total_flips - input$heads, input$flips_to_check)
+
+    plot(0, type = "n", ylim = c(0, 1), xlim = c(0, n),
+         xlab = "有效模擬次數", ylab = "條件機率估計")
+
+    for (k in 1:length(sim)) {
+      lines(sim[[k]], type = "l", col = "#d95f0240")
+    }
+
+    abline(h = theory, col = "blue", lty = 2, lwd = 2)
+
+    final_vals <- sapply(sim, function(x) tail(x[,2], 1))
+    text(rep(n, length(final_vals)), final_vals, labels = round(final_vals, 2),
+         pos = 4, cex = 0.7, col = "darkred")
+
+    legend("topright",
+           legend = c(
+             paste0("條件：前", input$flips_to_check, "次中有", input$expected_heads, "個正面"),
+             paste0("理論值 ≈ ", round(theory, 4))
+           ),
+           col = c("#d95f02", "blue"), lty = c(1, 2), lwd = 2, bty = "n", cex = 0.9)
+  })
+
+  output$theoryText <- renderText({
+    K <- input$expected_heads
+    m <- input$heads
+    n_check <- input$flips_to_check
+    N <- input$total_flips
+
+    theory_prob <- dhyper(K, m, N - m, n_check)
+
+    sim <- simulate_coin_toss()
+    sim_vals <- unlist(lapply(sim, function(x) tail(x[,2], 1)))
+    sim_mean <- mean(sim_vals)
+
+    formula <- paste0("dhyper(", K, ", ", m, ", ", N - m, ", ", n_check, ") = ", round(theory_prob, 5))
+    paste("每次擲投中正面數量 K =", m,
+          "\n理論機率公式：", formula,
+          "\n模擬平均相對頻率 ≈", round(sim_mean, 5))
+  })
+
+  output$testOutput <- renderText({
+    sim <- simulate_coin_toss()
+    sim_vals <- unlist(lapply(sim, function(x) tail(x[,2], 1)))
+
+    theory_prob <- dhyper(input$expected_heads, input$heads,
+                          input$total_flips - input$heads, input$flips_to_check)
+    mse <- mean((sim_vals - theory_prob)^2)
+
+    ks_test <- tryCatch({
+      ks.test(sim_vals, "punif", min = 0, max = 1)
+    }, error = function(e) list(p.value = NA))
+
+    paste("模擬結果的 MSE：", round(mse, 6),
+          "\nK-S test p-value:", ks_test$p.value)
+  })
+
+  output$cumulativePlot <- renderPlot({
+    sim <- simulate_coin_toss()
+    req(sim)
+
+    all_conditional <- do.call(c, lapply(sim, function(x) x[,2]))
+    cum_conditional <- cumsum(all_conditional) / seq_along(all_conditional)
+
+    plot(cum_conditional, type = "l", col = "#d95f02", ylim = c(0, 1),
+         xlab = "模擬次數", ylab = "累積比例",
+         main = paste0("前", input$flips_to_check, "次中", input$expected_heads, "正面的條件機率"))
+  })
+
+  output$boxPlot <- renderPlot({
+    sim <- simulate_coin_toss()
+    req(sim)
+
+    sim_vals <- unlist(lapply(sim, function(x) tail(x[,2], 1)))
+
+    df <- data.frame(Value = sim_vals)
+
+    ggplot(df, aes(x = "", y = Value)) +
+      geom_boxplot(fill = "#d95f02") +
+      labs(title = "模擬結果 Box Plot", x = "", y = "最終條件機率") +
+      theme_minimal()
+  })
+
+  output$progress_ui <- renderUI({
+    tags$div(style = "height:20px;")
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+# 6.延伸
+
+## (1)樣本平均可否用中央極限定理來近似它的分佈
+
+```{r}
+set.seed(1234)
+n_simulations <- 50000
+
+# 儲存模擬結果
+results <- data.frame(
+  p_i = numeric(n_simulations),
+  p_ii = numeric(n_simulations)
+)
+
+# 執行模擬：只保留總共5個正面的情況
+for (i in 1:n_simulations) {
+  tosses <- sample(c(0, 1), size = 10, replace = TRUE)
+  if (sum(tosses) == 5) {
+    results$p_i[i] <- if (tosses[1] == 1) 1 else 0
+    results$p_ii[i] <- if (sum(tosses[1:5]) == 3) 1 else 0
+  } else {
+    results$p_i[i] <- NA
+    results$p_ii[i] <- NA
+  }
+}
+
+# 移除 NA
+valid_p_i <- na.omit(results$p_i)
+valid_p_ii <- na.omit(results$p_ii)
+
+# 分組參數：每組樣本數、分幾組
+n_group <- 1000  # 每組樣本個數
+m <- 1000        # 模擬幾次平均
+
+# 取樣並平均
+set.seed(123)
+group_means_i <- replicate(m, mean(sample(valid_p_i, n_group, replace = TRUE)))
+group_means_ii <- replicate(m, mean(sample(valid_p_ii, n_group, replace = TRUE)))
+
+# 畫圖：p_i 的樣本平均分佈
+hist(group_means_i, probability = TRUE, breaks = 50,
+     main = "p_i 的樣本平均分佈（CLT 驗證）", xlab = "平均值", col = "lightgray")
+curve(dnorm(x, mean = mean(valid_p_i), sd = sd(valid_p_i) / sqrt(n_group)),
+      col = "red", lwd = 2, add = TRUE)
+legend("topright", legend = c("模擬樣本平均", "CLT 常態近似"),
+       col = c("gray", "red"), lwd = c(1, 2), bty = "n")
+
+# 畫圖：p_ii 的樣本平均分佈
+hist(group_means_ii, probability = TRUE, breaks = 50,
+     main = "p_ii 的樣本平均分佈（CLT 驗證）", xlab = "平均值", col = "lightblue")
+curve(dnorm(x, mean = mean(valid_p_ii), sd = sd(valid_p_ii) / sqrt(n_group)),
+      col = "blue", lwd = 2, add = TRUE)
+legend("topright", legend = c("模擬樣本平均", "CLT 常態近似"),
+       col = c("lightblue", "blue"), lwd = c(1, 2), bty = "n")
+
+```
+
+### Q-Q 圖
+
+```{r}
+# 繪製 Q-Q 圖
+qqnorm(group_means_i, main = "p_i 的 Q-Q 圖")
+qqline(group_means_i, col = "red")
+
+qqnorm(group_means_ii, main = "p_ii 的 Q-Q 圖")
+qqline(group_means_ii, col = "blue")
+```
+
+兩張圖的數據點都在直線附近且均勻分佈,數據更接近常態分佈。
+
+
+### Shapiro-Wilk 正態檢定
+
+```{r}
+# Shapiro-Wilk 正態檢定
+shapiro.test(group_means_i)  # p-value 用來檢查 p_i 的樣本平均
+shapiro.test(group_means_ii) # p-value 用來檢查 p_ii 的樣本平均
+```
+
+對於 group_means_i 的 p-value = 0.7819：
+
+p-value = 0.7819 大於常見的顯著性水平 0.05，這表示我們無法拒絕零假設，即樣本 group_means_i 沒有顯示出顯著的偏離常態分佈。
+
+換句話說，group_means_i 可能來自常態分佈。
+
+對於 group_means_ii 的 p-value = 0.4645：
+
+p-value = 0.4645 也大於 0.05，這同樣意味著我們無法拒絕零假設，即樣本 group_means_ii 也沒有顯示出顯著的偏離常態分佈。
+
+因此，group_means_ii 也可能來自常態分佈。
+
+### 不同樣本數的中央極限定理
+
+```{r}
+set.seed(1234)
+n_simulations <- 50000
+
+# 儲存模擬結果
+results <- data.frame(
+  p_i = numeric(n_simulations),
+  p_ii = numeric(n_simulations)
+)
+
+# 模擬：只保留總共5個正面的情況
+for (i in 1:n_simulations) {
+  tosses <- sample(c(0, 1), size = 10, replace = TRUE)
+  if (sum(tosses) == 5) {
+    results$p_i[i] <- if (tosses[1] == 1) 1 else 0
+    results$p_ii[i] <- if (sum(tosses[1:5]) == 3) 1 else 0
+  } else {
+    results$p_i[i] <- NA
+    results$p_ii[i] <- NA
+  }
+}
+
+# 移除 NA
+valid_p_i <- na.omit(results$p_i)
+valid_p_ii <- na.omit(results$p_ii)
+
+# 各種樣本數
+sample_sizes <- c(30, 100, 500,1000,5000,12000)
+m <- 1000  # 每種樣本大小下平均多少次
+
+par(mfrow = c(2, 3))  # 分成 2x2 圖形格子
+
+for (n in sample_sizes) {
+  # 重複抽樣與計算樣本平均
+  group_means <- replicate(m, mean(sample(valid_p_i, n, replace = TRUE)))
+  
+  # 繪圖
+  hist(group_means, probability = TRUE, breaks = 30,
+       main = paste0("樣本數 n = ", n),
+       xlab = "平均值", col = "lightgray")
+  
+  # 疊加常態分布曲線
+  curve(dnorm(x, mean = mean(valid_p_i), sd = sd(valid_p_i) / sqrt(n)),
+        col = "red", lwd = 2, add = TRUE)
+}
+
+# (ii) 中央極限定理：p_ii
+par(mfrow = c(2, 3))  # 分成 2x3 圖形格子
+
+for (n in sample_sizes) {
+  # 重複抽樣與計算樣本平均
+  group_means <- replicate(m, mean(sample(valid_p_ii, n, replace = TRUE)))
+  
+  # 繪圖
+  hist(group_means, probability = TRUE, breaks = 30,
+       main = paste0("p_ii，樣本數 n = ", n),
+       xlab = "平均值", col = "lightblue")
+  
+  # 疊加常態分布曲線
+  curve(dnorm(x, mean = mean(valid_p_ii), sd = sd(valid_p_ii) / sqrt(n)),
+        col = "blue", lwd = 2, add = TRUE)
+}
+
+par(mfrow = c(1, 1))  # 恢復單圖模式
+
+```
+
+### 結論
+
+中央極限定理（Central Limit Theorem, CLT） - 無論母體分佈的形狀如何，樣本均值的分佈（當樣本大小足夠大時）會接近 常態分佈，並且其均值為母體均值，標準差為母體標準差除以樣本大小的平方根。
+
+假設從母體中抽取多個獨立樣本，每個樣本的大小是 n。 無論母體分佈是什麼樣子，樣本均值的分佈會接近常態分佈，當樣本數 n 足夠大時，即使母體分佈不是常態分佈，樣本均值的分佈也會是常態分佈。
+X¯∼N(μ,σ2n)
+
+其中：
+
+μ
+ 是母體均值。
+
+σ2
+ 是母體方差。
+
+n
+ 是樣本大小。
+
+即使母體的分佈不是常態的，當樣本大小 n 足夠大時，樣本均值的分佈會逼近常態分佈。
+
+## (2)連續正面出現幾次
+
+```{r echo=FALSE}
+# 安裝並加載 Shiny 套件（如尚未安裝）
+if (!require(shiny)) install.packages("shiny", dependencies = TRUE)
+library(shiny)
+
+# UI 設置
+ui <- fluidPage(
+  titlePanel("連續正面出現次數的模擬"),
+
+  sidebarLayout(
+    sidebarPanel(
+      numericInput("n_trials", "重複模擬次數 n_trials:", value = 1000, min = 100),
+      numericInput("N", "每次擲投總次數 N:", value = 10, min = 1),
+      numericInput("K", "每次擲投中正面數量 K:", value = 5, min = 0, max = 10),
+      actionButton("goButton", "開始模擬")
+    ),
+
+    mainPanel(
+      h3("模擬結果"),
+      verbatimTextOutput("consecutiveHeadsResult"),
+      verbatimTextOutput("averageConsecutiveHeads"),
+      plotOutput("consecutiveHeadsPlot")
+    )
+  )
+)
+
+# Server 設置
+server <- function(input, output) {
+
+  observeEvent(input$goButton, {
+
+    n_trials <- input$n_trials
+    N <- input$N
+    K <- input$K
+
+    # 統計變數
+    consecutive_counts <- numeric(N + 1)  # 各種連續次數出現頻率
+    max_consecutive_all <- numeric(n_trials)  # 每次模擬的最大連續值
+
+    for (i in 1:n_trials) {
+      x <- sample(c(rep(1, K), rep(0, N - K)))  # 固定 K 個正面，打亂順序
+
+      max_consecutive <- 0
+      current_streak <- 0
+
+      for (j in 1:N) {
+        if (x[j] == 1) {
+          current_streak <- current_streak + 1
+        } else {
+          current_streak <- 0
+        }
+        max_consecutive <- max(max_consecutive, current_streak)
+      }
+
+      # 統計每次最大連續值
+      consecutive_counts[max_consecutive + 1] <- consecutive_counts[max_consecutive + 1] + 1
+      max_consecutive_all[i] <- max_consecutive
+    }
+
+    # 相對頻率分佈
+    consecutive_probs <- consecutive_counts / n_trials
+
+    # 平均最大連續正面次數
+    avg_consecutive <- mean(max_consecutive_all)
+
+    # 顯示文字結果
+    output$consecutiveHeadsResult <- renderText({
+      paste("在", n_trials, "次模擬中，每個連續正面出現次數的頻率如下：")
+    })
+
+    # 顯示平均連續次數
+    output$averageConsecutiveHeads <- renderText({
+      paste("平均的最大連續正面次數為：", round(avg_consecutive, 2))
+    })
+
+    # 長條圖
+    output$consecutiveHeadsPlot <- renderPlot({
+      barplot(consecutive_probs,
+              main = "連續正面出現次數的機率分佈",
+              xlab = "連續正面出現次數",
+              ylab = "機率",
+              col = "skyblue",
+              border = "white",
+              names.arg = 0:N)
+    })
+
+  })
+}
+
+# 啟動應用
+shinyApp(ui = ui, server = server)
+
+```
+
+常態分佈（bell curve）：
+
+- 對稱
+
+- 有單一高峰
+
+- 兩側逐漸下降（左尾右尾）
+
+而「最長連續正面次數」這個統計量具有以下特性，使其偏離常態分佈：
+
+- 離散變數（整數）
+
+- 它只能是 0, 1, 2, ..., K，不是連續變數。
+
+- 不對稱（右偏）
+
+大部分模擬的最大連續次數都集中在中間值偏左（例如 2 或 3），很少會出現非常長的連續正面。這導致機率分佈通常呈現右偏。
+
+- 有上限與下限
+
+下限：0（完全沒有正面）
+
+上限：K（全部正面排在一起）
+
+有界限制與常態分佈的無限範圍不相容。
+
+
+實際應用場景:
+
+檢查隨機性的表現（是否某次連續出現異常多）
+
+風險評估與運氣分析（如賭博、股市連續上漲天數）
+
+DNA/序列分析（例如找出重複片段的最大長度）
+
+品質控制/生產線問題排查（連續次品率）
+
+## (3)二項分配如何近似超幾何分配
+
+當母體 \( N \) 非常大時，**超幾何分配**可以近似為**二項分配**。這是統計學中的一個常見近似方法，適用於母體容量遠大於樣本數的情況。
+
+### 近似條件：
+
+- 母體大小 \( N \) 很大（例如 \( N > 10 \times n \)，其中 \( n \) 是樣本數）。
+- 抽樣數量 \( n \) 相對較小（遠小於 \( N \)）。
+- 母體中成功項的比例為 \( p = \frac{K}{N} \)，其中 \( K \) 是母體中成功的個數。
+
+在這種情況下，超幾何分配的機率模型：
+\[
+X \sim \text{Hypergeometric}(N, K, n)
+\]
+可以近似為二項分配：
+\[
+X \sim \text{Binomial}(n, p)
+\]
+其中 \( p = \frac{K}{N} \)。
+
+```{r}
+set.seed(1234)
+# 設定參數
+N <- 10000  # 母體大小
+K <- 3000   # 母體中成功個數
+n <- 20     # 抽樣樣本數
+k <- 5      # 關注的成功次數
+
+# 超幾何分配的機率
+phyper_val <- dhyper(k, K, N - K, n)
+
+# 二項分配的機率
+p <- K / N
+pbinom_val <- dbinom(k, n, p)
+
+# 輸出結果
+data.frame(
+  Method = c("Hypergeometric", "Binomial Approximation"),
+  Probability = c(phyper_val, pbinom_val)
+)
+
+```
+
+從結果可以看到，當 \( N = 10000 \)、\( K = 3000 \)、\( n = 20 \)、\( k = 5 \) 時，超幾何分配與二項分配給出的機率非常接近，證明了當母體很大時的近似有效性。
+
+### shiny-(原版)二項分配&超幾何分配
+
+在抽樣 n 次中，正好抽到 k 個成功項的機率是多少？
+
+```{r echo=FALSE}
+# 加載必要的庫
+library(shiny)
+library(ggplot2)
+
+# 定義 UI
+ui <- fluidPage(
+  titlePanel("超幾何分配 vs. 二項分配"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      numericInput("N", "母體大小 (N)", value = 1000, min = 10, max = 10000),
+      numericInput("K", "母體中成功數量 (K)", value = 100, min = 1, max = 1000),
+      numericInput("n", "抽樣數量 (n)", value = 30, min = 1, max = 100),
+      actionButton("update", "更新圖表")
+    ),
+    
+    mainPanel(
+      plotOutput("distPlot")
+    )
+  )
+)
+
+# 定義伺服器邏輯
+server <- function(input, output) {
+  
+  observeEvent(input$update, {
+    
+    # 提取輸入值
+    N <- input$N
+    K <- input$K
+    n <- input$n
+    p <- K / N  # 計算二項分配的成功機率
+    
+    # 生成超幾何分配的機率質量函數 (PMF)
+    hypergeom_pmf <- dhyper(0:n, K, N-K, n)
+    
+    # 生成二項分配的機率質量函數 (PMF)
+    binom_pmf <- dbinom(0:n, n, p)
+    
+    # 創建數據框來繪製圖形
+    df <- data.frame(
+      k = rep(0:n, 2),
+      pmf = c(hypergeom_pmf, binom_pmf),
+      distribution = rep(c("Hypergeometric", "Binomial"), each = length(0:n))
+    )
+    
+    # 使用 ggplot2 繪製比較圖
+    output$distPlot <- renderPlot({
+      ggplot(df, aes(x = k, y = pmf, color = distribution)) +
+        geom_point() +
+        geom_line() +
+        labs(
+          title = "Hypergeometric vs. Binomial",
+          x = "成功的個數 (k)",
+          y = "機率 P(X = k)",
+          color = "分配類型"
+        ) +
+        theme_minimal() +
+        theme(legend.position = "top")
+    })
+    
+  })
+}
+
+# 執行 Shiny 應用
+shinyApp(ui = ui, server = server)
+
+```
+
+### shiny-(改版)二項分配&超幾何分配
+
+```{r}
+# 加載必要的庫
+library(shiny)
+library(ggplot2)
+
+# 定義 UI
+ui <- fluidPage(
+  titlePanel("超幾何分配 vs. 二項分配"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      numericInput("N", "母體大小 (N)", value = 1000, min = 10, max = 10000),
+      numericInput("K", "母體中成功數量 (K)", value = 100, min = 1, max = 1000),
+      numericInput("n", "抽樣數量 (n)", value = 30, min = 1, max = 100),
+      radioButtons("dist_choice", "選擇顯示的分配",
+                   choices = c("二項分配", "超幾何分配", "兩者比較"), selected = "兩者比較"),
+      actionButton("update", "更新圖表")
+    ),
+    
+    mainPanel(
+      plotOutput("distPlot"),
+      verbatimTextOutput("overflowWarning")  # 警告輸出
+    )
+  )
+)
+
+# 定義伺服器邏輯
+server <- function(input, output) {
+  
+  observeEvent(input$update, {
+    
+    # 提取輸入值
+    N <- input$N
+    K <- input$K
+    n <- input$n
+    p <- K / N  # 計算二項分配的成功機率
+    
+    # 檢查階乘溢出 (檢查 choose(N, n) 是否會超出範圍)
+    tryCatch({
+      # 計算超幾何分配的機率質量函數 (PMF)
+      hypergeom_pmf <- dhyper(0:n, K, N-K, n)
+      
+      # 計算二項分配的機率質量函數 (PMF)
+      binom_pmf <- dbinom(0:n, n, p)
+      
+      # 檢查數值溢出情況 (例如，階乘是否溢出)
+      log_choose_result <- log(choose(N, n))  # 使用對數來檢查階乘
+      if (is.infinite(log_choose_result)) {
+        output$overflowWarning <- renderText("警告：計算超出階乘範圍，數值溢出！")
+      } else {
+        output$overflowWarning <- renderText("計算成功，未發生溢出。")
+      }
+      
+    }, error = function(e) {
+      # 如果發生錯誤，顯示錯誤消息
+      output$overflowWarning <- renderText("錯誤：計算過程中發生溢出或數值錯誤。")
+    })
+    
+    # 根據用戶選擇的顯示模式來篩選結果
+    if (input$dist_choice == "二項分配") {
+      df <- data.frame(
+        k = 0:n,
+        pmf = binom_pmf,
+        distribution = rep("Binomial", each = length(0:n))
+      )
+    } else if (input$dist_choice == "超幾何分配") {
+      df <- data.frame(
+        k = 0:n,
+        pmf = hypergeom_pmf,
+        distribution = rep("Hypergeometric", each = length(0:n))
+      )
+    } else {
+      # 兩者比較
+      df <- data.frame(
+        k = rep(0:n, 2),
+        pmf = c(hypergeom_pmf, binom_pmf),
+        distribution = rep(c("Hypergeometric", "Binomial"), each = length(0:n))
+      )
+    }
+    
+    # 使用 ggplot2 繪製比較圖
+    output$distPlot <- renderPlot({
+      ggplot(df, aes(x = k, y = pmf, color = distribution)) +
+        geom_point() +
+        geom_line() +
+        labs(
+          title = paste(input$dist_choice, "分配"),
+          x = "成功的個數 (k)",
+          y = "機率 P(X = k)",
+          color = "分配類型"
+        ) +
+        theme_minimal() +
+        theme(legend.position = "top")
+    })
+    
+  })
+}
+
+# 執行 Shiny 應用
+shinyApp(ui = ui, server = server)
+
+```
+
+### shiny-(改版)做了什麼
+
+- 階乘溢出檢查：我們使用 log(choose(N, n)) 來檢查組合數是否會超出範圍。如果結果是 Inf，則表示計算過程中可能會發生溢出，並在界面上顯示警告訊息。
+
+- 警告顯示：如果計算過程中發現階乘超出了數值範圍，則會顯示警告消息，提醒用戶該計算可能會失敗。
+
+### 結論
+
+- 當 母體 N很大且抽樣數n相對小時，兩者曲線會非常接近（二項分配是良好的近似）。
+- 當 n 或 K 接近 N 時，超幾何分配會明顯偏離二項分配。
+
+
+
+
+
+

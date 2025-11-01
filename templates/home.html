@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>首頁選單</title>
+  <style>
+    body {
+      background-color: #f9fafb;
+      font-family: "Microsoft JhengHei", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      text-align: center;
+    }
+
+    h1 {
+      color: #1f2937;
+      margin-bottom: 40px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 15px 30px;
+      margin: 10px;
+      font-size: 18px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: white;
+      transition: 0.2s;
+    }
+
+    .btn:hover { transform: scale(1.05); }
+
+    .btn-timeline { background-color: #2563eb; }
+    .btn-timeline:hover { background-color: #1d4ed8; }
+
+    .btn-dataviz { background-color: #059669; }
+    .btn-dataviz:hover { background-color: #047857; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>請選擇功能</h1>
+    <a href="/timeline/" class="btn btn-timeline">🗓️ 進度表</a>
+    <a href="/dataviz/" class="btn btn-dataviz">📊 資料視覺化</a>
+  </div>
+</body>
+</html>
