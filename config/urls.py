@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 from . import views
 
 urlpatterns = [
-    path("", views.home, name="home"),  # ✅ 首頁：兩個選項
+    path('', include('apps.core.urls')),  # ✅ 首頁：兩個選項
     path("timeline/", include("apps.timeline.urls")),
     path("dataviz/", include("apps.dataviz.urls")),
     path("admin/", admin.site.urls),

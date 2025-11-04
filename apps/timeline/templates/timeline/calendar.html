@@ -1,0 +1,231 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}行事曆與任務管理{% endblock %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row gap-6">
+
+  <!-- 📅 左邊：行事曆 -->
+  <div class="flex-1 bg-white p-6 rounded-2xl shadow">
+    <h2 class="text-xl font-bold text-indigo-700 mb-4">📅 行事曆</h2>
+    <div id="calendar"></div>
+  </div>
+
+  <!-- ✅ 右邊：To-Do 清單 -->
+  <div class="w-full md:w-80 bg-white p-6 rounded-2xl shadow flex flex-col">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold text-purple-700">任務清單</h2>
+      <button id="add-btn"
+        class="bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700 transition">
+        ➕ 新增
+      </button>
+    </div>
+
+    <!-- 分類篩選 -->
+    <div class="mb-3">
+      <select id="category-filter" class="w-full border rounded-lg px-2 py-1">
+        <option>全部</option>
+        <option>學習</option>
+        <option>工作</option>
+        <option>生活</option>
+      </select>
+    </div>
+
+    <!-- 任務列表 -->
+    <div id="task-list" class="space-y-2 max-h-[500px] overflow-y-auto flex-1"></div>
+  </div>
+</div>
+
+<!-- 🪟 任務編輯彈窗 -->
+<div id="task-modal" class="fixed inset-0 hidden bg-black/40 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-2xl w-96 shadow-lg space-y-3 relative">
+    <button id="close-modal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">✕</button>
+    <h2 id="modal-title" class="text-lg font-semibold mb-2">編輯任務</h2>
+
+    <form id="task-form" class="space-y-3">
+      <input type="hidden" id="task-id">
+      <label class="block">
+        <span class="text-gray-700 text-sm">標題</span>
+        <input type="text" id="task-title" class="w-full border rounded-lg p-2 mt-1" required>
+      </label>
+
+      <label class="block">
+        <span class="text-gray-700 text-sm">分類</span>
+        <select id="task-category" class="w-full border rounded-lg p-2 mt-1">
+          <option>學習</option>
+          <option>工作</option>
+          <option>生活</option>
+        </select>
+      </label>
+
+      <label class="block">
+        <span class="text-gray-700 text-sm">日期</span>
+        <input type="date" id="task-start" class="w-full border rounded-lg p-2 mt-1">
+      </label>
+
+      <label class="block">
+        <span class="text-gray-700 text-sm">描述</span>
+        <textarea id="task-desc" class="w-full border rounded-lg p-2 mt-1" rows="3"></textarea>
+      </label>
+
+      <div class="flex justify-between mt-4">
+        <button type="button" id="done-btn" class="bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700">標示完成</button>
+        <div class="space-x-2">
+          <button type="button" id="delete-btn" class="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700">刪除</button>
+          <button type="submit" class="bg-indigo-600 text-white px-3 py-1 rounded-lg hover:bg-indigo-700">儲存</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- FullCalendar -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const calendarEl = document.getElementById("calendar");
+  const modal = document.getElementById("task-modal");
+  const form = document.getElementById("task-form");
+  const idInput = document.getElementById("task-id");
+  const titleInput = document.getElementById("task-title");
+  const categoryInput = document.getElementById("task-category");
+  const dateInput = document.getElementById("task-start");
+  const descInput = document.getElementById("task-desc");
+  const modalTitle = document.getElementById("modal-title");
+  const closeBtn = document.getElementById("close-modal");
+  const deleteBtn = document.getElementById("delete-btn");
+  const doneBtn = document.getElementById("done-btn");
+  const listDiv = document.getElementById("task-list");
+  const categoryFilter = document.getElementById("category-filter");
+  const addBtn = document.getElementById("add-btn");
+
+  // 初始化行事曆
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: "dayGridMonth",
+    locale: "zh-tw",
+    editable: true,
+    height: 650,
+    eventSources: [{ url: "/timeline/tasks/", method: "GET" }],
+    eventClick: function (info) {
+      const id = info.event.id;
+      fetch(`/timeline/task/${id}/`)
+        .then(res => res.json())
+        .then(task => {
+          modal.classList.remove("hidden");
+          modalTitle.textContent = "編輯任務";
+          idInput.value = task.id;
+          titleInput.value = task.title;
+          categoryInput.value = task.category;
+          dateInput.value = task.start_date;
+          descInput.value = task.description || "";
+          doneBtn.textContent = task.is_done ? "✅ 已完成" : "標示完成";
+        });
+    },
+    eventDrop: function (info) {
+      updateTask(info.event);
+    },
+  });
+  calendar.render();
+
+  // ➕ 新增任務
+  addBtn.onclick = () => {
+    form.reset();
+    idInput.value = "";
+    modalTitle.textContent = "新增任務";
+    doneBtn.textContent = "標示完成";
+    modal.classList.remove("hidden");
+  };
+  closeBtn.onclick = () => modal.classList.add("hidden");
+
+  // 儲存修改或新增
+  form.onsubmit = e => {
+    e.preventDefault();
+    const id = idInput.value;
+    const payload = {
+      title: titleInput.value,
+      category: categoryInput.value,
+      start: dateInput.value,
+      description: descInput.value,
+    };
+    const url = id ? `/timeline/edit/${id}/` : "/timeline/add/";
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
+      body: JSON.stringify(payload)
+    }).then(() => {
+      modal.classList.add("hidden");
+      calendar.refetchEvents();
+      loadTasks();
+    });
+  };
+
+  // 拖曳更新日期
+  function updateTask(event) {
+    fetch(`/timeline/edit/${event.id}/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
+      body: JSON.stringify({
+        title: event.title.split(" (")[0],
+        category: event.title.match(/\((.*?)\)/)[1],
+        start: event.startStr
+      })
+    }).then(() => {
+      calendar.refetchEvents();
+      loadTasks();
+    });
+  }
+
+  // 標示完成
+  doneBtn.onclick = () => {
+    const id = idInput.value;
+    fetch(`/timeline/toggle/${id}/`, { method: "POST", headers: { "X-CSRFToken": "{{ csrf_token }}" } })
+      .then(() => { modal.classList.add("hidden"); calendar.refetchEvents(); loadTasks(); });
+  };
+
+  // 刪除任務
+  deleteBtn.onclick = () => {
+    const id = idInput.value;
+    fetch(`/timeline/delete/${id}/`, { method: "POST", headers: { "X-CSRFToken": "{{ csrf_token }}" } })
+      .then(() => { modal.classList.add("hidden"); calendar.refetchEvents(); loadTasks(); });
+  };
+
+  // 右側任務清單
+  function loadTasks(category = "全部") {
+    fetch(`/timeline/tasks/?category=${category}`)
+      .then(res => res.json())
+      .then(tasks => {
+        listDiv.innerHTML = "";
+        tasks.forEach(t => {
+          const div = document.createElement("div");
+          div.className = "p-3 rounded-lg border-l-4 mb-2 cursor-pointer " +
+            (t.title.includes("(學習)") ? "border-purple-400 bg-purple-50"
+             : t.title.includes("(工作)") ? "border-blue-400 bg-blue-50"
+             : "border-green-400 bg-green-50");
+          div.innerHTML =
+            `<p class="font-semibold">${t.title}</p>
+             <p class="text-sm text-gray-600">${t.start}</p>`;
+          div.onclick = () => {
+            fetch(`/timeline/task/${t.id}/`)
+              .then(res => res.json())
+              .then(task => {
+                modal.classList.remove("hidden");
+                modalTitle.textContent = "編輯任務";
+                idInput.value = task.id;
+                titleInput.value = task.title;
+                categoryInput.value = task.category;
+                dateInput.value = task.start_date;
+                descInput.value = task.description || "";
+              });
+          };
+          listDiv.appendChild(div);
+        });
+      });
+  }
+
+  categoryFilter.onchange = e => loadTasks(e.target.value);
+  loadTasks();
+});
+</script>
+{% endblock %}

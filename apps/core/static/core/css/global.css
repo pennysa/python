@@ -1,0 +1,94 @@
+/* apps/core/static/core/css/global.css */
+/* ===== 全域樣式：團體 & 個人行事曆系統 ===== */
+
+/* 頁面滾動時平滑效果 */
+html {
+    scroll-behavior: smooth;
+  }
+  
+  /* 側邊欄連結樣式 */
+  .sidebar-link {
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    color: #f0f0ff;
+  }
+  .sidebar-link:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateX(3px);
+  }
+  .sidebar-link.active {
+    background-color: rgba(255, 255, 255, 0.25);
+    font-weight: 600;
+  }
+  
+  /* ---- 卡片樣式 ---- */
+  .card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.25rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease-in-out;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+  }
+  
+  /* ---- 行事曆事件樣式 ---- */
+  .event {
+    border-left: 4px solid;
+    padding-left: 0.75rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+  .event.personal {
+    border-color: #a855f7; /* 紫色 - 個人 */
+    background: #f9f5ff;
+  }
+  .event.group {
+    border-color: #3b82f6; /* 藍色 - 團體 */
+    background: #f0f7ff;
+  }
+  .event-time {
+    font-size: 0.8rem;
+    color: #555;
+  }
+  
+  /* ---- 捲軸樣式 ---- */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f5f5f7;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #818cf8, #a855f7);
+    border-radius: 6px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #6366f1, #9333ea);
+  }
+  
+  /* ---- 通用文字與配色 ---- */
+  body {
+    font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    background-color: #f8fafc;
+    color: #1e293b;
+  }
+  
+  h1, h2, h3 {
+    font-weight: 700;
+    color: #1e293b;
+  }
+  
+  /* ---- 頁面容器 ---- */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  

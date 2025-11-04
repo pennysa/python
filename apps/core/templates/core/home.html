@@ -1,0 +1,51 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}首頁 | 行事曆系統{% endblock %}
+
+{% block content %}
+<div class="container mx-auto">
+  <h1 class="text-2xl font-bold mb-4">歡迎使用行事曆系統</h1>
+  <p class="text-gray-700 mb-8">
+    這裡是你的個人與團體行事曆首頁，可以快速瀏覽、建立或管理事件。
+  </p>
+
+  <!-- 功能區塊 -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- 個人行事曆 -->
+    <div class="card">
+      <h2 class="text-lg font-semibold text-purple-700 mb-2">個人行事曆</h2>
+      <p class="text-gray-600 text-sm mb-4">管理你的每日計畫與學習時程。</p>
+      <a
+        href="{% url 'calendar:personal' %}"
+        class="inline-block bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
+        >前往查看</a
+      >
+    </div>
+
+    <!-- 團體行事曆 -->
+    <div class="card">
+      <h2 class="text-lg font-semibold text-blue-600 mb-2">團體行事曆</h2>
+      <p class="text-gray-600 text-sm mb-4">查看團隊會議、分工與活動紀錄。</p>
+      <a
+        href="{% url 'calendar:group' %}"
+        class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+        >進入團體頁面</a
+      >
+    </div>
+
+    <!-- 資料視覺化 -->
+    <div class="card">
+      <h2 class="text-lg font-semibold text-indigo-600 mb-2">資料視覺化</h2>
+      <p class="text-gray-600 text-sm mb-4">
+        使用圖表快速了解學習與進度趨勢。
+      </p>
+      <a
+        href="{% url 'dataviz:dashboard' %}"
+        class="inline-block bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+        >查看圖表</a
+      >
+    </div>
+  </div>
+</div>
+{% endblock %}
