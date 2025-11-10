@@ -2,17 +2,20 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+# === 讀取環境變數 ===
 load_dotenv()
+
 # === 基本路徑設定 ===
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # === 安全設定 ===
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', 'your-dev-secret-key')  # 保險起見
 DEBUG = True
 ALLOWED_HOSTS = []
 
 # === 已安裝的 App ===
 INSTALLED_APPS = [
+    # Django 內建
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -20,9 +23,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # 你的自訂 app
-    'apps.dataviz',
-    'apps.timeline',   # ← 之後你建立新 app 後要加這行
+    # 🌈 Planora 的主要模組
+    'apps.core',       # ✅ 共用模板與首頁
+    # 'apps.timeline',   # ✅ 團體共編行事曆
+    'apps.personal',   # ✅ 個人行事曆
+    #'apps.meetings',   # ✅ 會議記錄
 ]
 
 # === 中介層 ===
@@ -43,8 +48,8 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # 可放全域模板資料夾
-        'APP_DIRS': True,
+        'DIRS': [BASE_DIR / 'templates'],  # ✅ 若未來有全域模板可放這裡
+        'APP_DIRS': True,  # ✅ 會自動尋找各 app 下的 /templates/
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -81,17 +86,14 @@ TIME_ZONE = 'Asia/Taipei'
 USE_I18N = True
 USE_TZ = True
 
-# === 靜態檔案設定 ===
+# === 靜態檔案 ===
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# === 媒體檔案設定（上傳檔案用） ===
+# === 媒體檔案（使用者上傳） ===
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'uploads'
 
 # === 預設主鍵型態 ===
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'uploads'

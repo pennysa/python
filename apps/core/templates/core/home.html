@@ -1,51 +1,217 @@
-{% extends 'core/base.html' %}
+{% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}首頁 | 行事曆系統{% endblock %}
+{% block title %}Home | Planora{% endblock %}
 
 {% block content %}
-<div class="container mx-auto">
-  <h1 class="text-2xl font-bold mb-4">歡迎使用行事曆系統</h1>
-  <p class="text-gray-700 mb-8">
-    這裡是你的個人與團體行事曆首頁，可以快速瀏覽、建立或管理事件。
-  </p>
+<div class="relative flex flex-col items-center justify-center min-h-screen text-center overflow-hidden">
 
-  <!-- 功能區塊 -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <!-- 個人行事曆 -->
-    <div class="card">
-      <h2 class="text-lg font-semibold text-purple-700 mb-2">個人行事曆</h2>
-      <p class="text-gray-600 text-sm mb-4">管理你的每日計畫與學習時程。</p>
-      <a
-        href="{% url 'calendar:personal' %}"
-        class="inline-block bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
-        >前往查看</a
-      >
-    </div>
+  <!-- ☁️ 白天雲層 -->
+  <div class="cloud-layer absolute inset-0"></div>
+  <!-- ✨ 星空容器 -->
+  <div id="stars" class="absolute inset-0"></div>
 
-    <!-- 團體行事曆 -->
-    <div class="card">
-      <h2 class="text-lg font-semibold text-blue-600 mb-2">團體行事曆</h2>
-      <p class="text-gray-600 text-sm mb-4">查看團隊會議、分工與活動紀錄。</p>
-      <a
-        href="{% url 'calendar:group' %}"
-        class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-        >進入團體頁面</a
-      >
-    </div>
+  <!-- 🌤️ 主內容 -->
+<div class="space-y-8 z-10 relative max-w-2xl py-12 md:py-20">
+  <h1 class="text-5xl md:text-7xl font-extrabold leading-tight">
+    Welcome to <span>Planora</span>
+  </h1>
+  <p class="text-lg md:text-xl px-4 md:px-0">一起規劃你的時間・任務與夢想 ✨</p>
 
-    <!-- 資料視覺化 -->
-    <div class="card">
-      <h2 class="text-lg font-semibold text-indigo-600 mb-2">資料視覺化</h2>
-      <p class="text-gray-600 text-sm mb-4">
-        使用圖表快速了解學習與進度趨勢。
-      </p>
-      <a
-        href="{% url 'dataviz:dashboard' %}"
-        class="inline-block bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
-        >查看圖表</a
-      >
-    </div>
+  <!-- 📅 主按鈕區 -->
+  <div class="flex flex-col items-center justify-center gap-6 md:gap-10 mt-10 md:mt-14">
+    <a href="{% url 'personal_calendar' %}"
+       class="main-btn px-8 md:px-10 py-3 md:py-4 rounded-3xl text-white text-lg md:text-xl font-semibold">
+      🪄 Personal Calendar
+    </a>
+
+    <!-- 🌗 模式切換按鈕（改成自然跟隨主按鈕） -->
+    <button id="homeThemeToggle"
+            class="bg-white/85 text-gray-800 rounded-full px-6 py-2 font-semibold shadow-md hover:scale-105 transition">
+      🌞 日間模式
+    </button>
   </div>
 </div>
+
+
+<!-- 🌈 樣式與動畫 -->
+<style>
+  html, body {
+    height: auto;
+    min-height: 100%;
+    scroll-behavior: smooth;
+    overflow-y: auto;
+  }
+
+  body {
+    font-family: 'Fredoka','Noto Sans TC',sans-serif;
+    transition: background 1.5s ease, color 1s ease;
+  }
+
+  /* ☀️ 日間背景 */
+  body.home-day {
+    background: radial-gradient(circle at 30% 40%, rgba(255, 245, 230, 0.9) 0%, rgba(255, 236, 200, 0.4) 30%, transparent 70%),
+                linear-gradient(to bottom, #fff7ed 0%, #ffe0b2 40%, #ffd699 100%);
+    background-blend-mode: screen;
+    color: #2b2b2b;
+    position: relative;
+  }
+
+  /* ☁️ 雲層 */
+  .cloud-layer {
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 20% 40%, rgba(255,255,255,0.6) 0%, transparent 60%),
+                radial-gradient(circle at 80% 60%, rgba(255,255,255,0.4) 0%, transparent 70%),
+                radial-gradient(circle at 50% 80%, rgba(255,245,220,0.6) 0%, transparent 60%);
+    filter: blur(70px);
+    opacity: 0.7;
+    animation: cloudMove 40s linear infinite alternate;
+    z-index: 0;
+  }
+
+  @keyframes cloudMove {
+    0% { transform: translate(-10%, -10%) scale(1); }
+    100% { transform: translate(10%, 10%) scale(1.05); }
+  }
+
+  /* 🌃 夜間背景（深色動漫風） */
+  body.home-night {
+    background: radial-gradient(circle at 40% 15%, rgba(255,200,120,0.12) 0%, transparent 40%),
+                linear-gradient(to bottom, #090712 0%, #130d2f 40%, #2b1661 100%);
+    color: #fffaf2;
+  }
+
+  /* ✨ 星空 */
+  .star {
+    position: absolute;
+    background: #ffdca8;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(255,220,160,0.8);
+    animation: twinkle 3s infinite ease-in-out alternate;
+  }
+
+  @keyframes twinkle {
+    from { opacity: 0.3; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1.2); }
+  }
+
+  /* 標題樣式 */
+  h1 {
+    text-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    transition: text-shadow 1s ease, color 1s ease;
+  }
+
+  body.home-night h1 span {
+    color: #ffcc66;
+    text-shadow: 0 0 10px rgba(255,200,120,0.9), 0 0 25px rgba(255,180,80,0.6);
+  }
+
+  body.home-day h1 span {
+    color: #fbb03b;
+    text-shadow: 0 0 10px rgba(255,210,120,0.6);
+  }
+
+  /* 🌅 白天副標語 */
+  @keyframes softGlow {
+    0% { text-shadow: 0 0 6px rgba(255, 200, 100, 0.3); }
+    50% { text-shadow: 0 0 12px rgba(255, 180, 80, 0.6); }
+    100% { text-shadow: 0 0 6px rgba(255, 200, 100, 0.3); }
+  }
+
+  body.home-day p {
+    color: #f9a826;
+    font-weight: 500;
+    animation: softGlow 4s ease-in-out infinite;
+  }
+
+  /* 🌙 夜間副標語 */
+  body.home-night p {
+    color: #ffeac2;
+    text-shadow: 0 0 12px rgba(255,210,140,0.9);
+  }
+
+  /* 💖 主按鈕（日間） */
+  .main-btn {
+    background: linear-gradient(135deg, #ff9a76, #ff5cb8);
+    box-shadow: 0 8px 25px rgba(255,140,90,0.45);
+    transition: all 0.3s ease;
+  }
+
+  .main-btn:hover {
+    transform: scale(1.06);
+    box-shadow: 0 10px 35px rgba(255,150,110,0.6);
+  }
+
+  /* 💜 主按鈕（夜間紫光版） */
+  body.home-night .main-btn {
+    background: linear-gradient(135deg, #a78bfa, #7b68ee);
+    box-shadow: 0 8px 25px rgba(150,100,255,0.5);
+  }
+
+  body.home-night .main-btn:hover {
+    transform: scale(1.06);
+    box-shadow: 0 10px 35px rgba(170,130,255,0.7);
+  }
+</style>
+
+<!-- 🌙 日夜模式切換 -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    if (!document.body.classList.contains("home-day") && 
+        !document.body.classList.contains("home-night")) {
+      document.body.classList.add("home-day");
+    }
+
+    const navbar = document.getElementById("navbar");
+    if (navbar) {
+      navbar.classList.remove("navbar-night");
+      navbar.classList.add("navbar-day");
+    }
+  });
+
+  const toggleBtn = document.getElementById("homeThemeToggle");
+  const body = document.body;
+  const starContainer = document.getElementById("stars");
+  const cloudLayer = document.querySelector(".cloud-layer");
+
+  function createStars(count) {
+    for (let i = 0; i < count; i++) {
+      const s = document.createElement("div");
+      const size = Math.random() * 2 + 1;
+      s.className = "star";
+      s.style.width = `${size}px`;
+      s.style.height = `${size}px`;
+      s.style.top = `${Math.random() * 100}%`;
+      s.style.left = `${Math.random() * 100}%`;
+      s.style.animationDelay = `${Math.random() * 3}s`;
+      starContainer.appendChild(s);
+    }
+  }
+
+  toggleBtn.addEventListener("click", () => {
+    const isDay = body.classList.contains("home-day");
+    body.classList.toggle("home-day", !isDay);
+    body.classList.toggle("home-night", isDay);
+    starContainer.innerHTML = "";
+
+    const navbar = document.getElementById("navbar");
+    if (isDay) {
+      toggleBtn.textContent = "🌙 夜間模式";
+      createStars(150);
+      cloudLayer.style.display = "none";
+      if (navbar) {
+        navbar.classList.remove("navbar-day");
+        navbar.classList.add("navbar-night");
+      }
+    } else {
+      toggleBtn.textContent = "🌞 日間模式";
+      cloudLayer.style.display = "block";
+      if (navbar) {
+        navbar.classList.remove("navbar-night");
+        navbar.classList.add("navbar-day");
+      }
+    }
+  });
+</script>
 {% endblock %}

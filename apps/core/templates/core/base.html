@@ -1,194 +1,102 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}行事曆系統{% endblock %}</title>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Planora ✨{% endblock %}</title>
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
 
-    <!-- 全域 CSS -->
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'core/css/global.css' %}" />
+  <style>
+    body {
+      font-family: 'Fredoka','Noto Sans TC',sans-serif;
+      color: #1e293b;
+      overflow-x: hidden;
+      transition: background 1.5s ease, color 1s ease;
+    }
 
-    {% block extra_css %}{% endblock %}
-  </head>
+    /* 🌤️ 導航列樣式（白天） */
+    #navbar.navbar-day {
+      background: rgba(255, 255, 255, 0.75);
+      color: #1e293b;
+      box-shadow: 0 4px 20px rgba(255, 192, 203, 0.3);
+      backdrop-filter: blur(10px);
+      transition: background 1s ease, color 0.8s ease;
+    }
 
-  <body class="bg-gray-100">
-    <div class="flex min-h-screen">
-      <!-- 側邊欄 -->
-      <aside
-        class="w-64 bg-gradient-to-b from-indigo-600 to-purple-700 p-6 text-white sticky top-0"
-      >
-        <!-- Logo 區域 -->
-        <div class="mb-8">
-          <a
-            href="{% url 'core:home' %}"
-            class="flex items-center space-x-3 hover:opacity-80 transition"
-          >
-            <svg
-              class="w-10 h-10"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-            <div>
-              <h1 class="text-xl font-bold">行事曆系統</h1>
-              <p class="text-xs text-indigo-200">Calendar Management</p>
-            </div>
-          </a>
-        </div>
+    /* 🌙 導航列樣式（夜間） */
+    #navbar.navbar-night {
+      background: rgba(40, 20, 60, 0.6);
+      color: #f8fafc;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      transition: background 1s ease, color 0.8s ease;
+    }
 
-        <!-- 導航選單 -->
-        <nav class="space-y-2">
-          <!-- 首頁 -->
-          <a
-            href="{% url 'core:home' %}"
-            class="sidebar-link flex items-center space-x-3 p-3 rounded-lg hover:bg-white/10 transition {% if request.resolver_match.url_name == 'home' %}bg-white/20{% endif %}"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-              />
-            </svg>
-            <span class="font-medium">首頁</span>
-          </a>
+    /* hover 效果 */
+    #navbar a {
+      transition: color 0.4s ease;
+    }
 
-          <!-- 個人行事曆 -->
-          <div class="space-y-1">
-            <div
-              class="text-xs font-semibold text-indigo-200 uppercase tracking-wider px-3 py-2"
-            >
-              個人管理
-            </div>
-            <a
-              href="{% url 'calendar:personal' %}"
-              class="sidebar-link flex items-center space-x-3 p-3 rounded-lg hover:bg-white/10 transition {% if 'personal' in request.path %}bg-white/20{% endif %}"
-            >
-              <svg
-                class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 7V3m8 4V3m-9 8h10m-12 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z"
-                />
-              </svg>
-              <span class="font-medium">個人行事曆</span>
-            </a>
-          </div>
+    body.home-day #navbar a:hover {
+      color: #f472b6; /* 粉色 hover */
+    }
 
-          <!-- 團體行事曆 -->
-          <div class="space-y-1">
-            <div
-              class="text-xs font-semibold text-indigo-200 uppercase tracking-wider px-3 py-2"
-            >
-              團體管理
-            </div>
-            <a
-              href="{% url 'calendar:group' %}"
-              class="sidebar-link flex items-center space-x-3 p-3 rounded-lg hover:bg-white/10 transition {% if 'group' in request.path %}bg-white/20{% endif %}"
-            >
-              <svg
-                class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17 20h5V8H2v12h5m10-12V4a2 2 0 00-2-2H9a2 2 0 00-2 2v4"
-                />
-              </svg>
-              <span class="font-medium">團體行事曆</span>
-            </a>
-          </div>
+    body.home-night #navbar a:hover {
+      color: #ffcc88; /* 夜間亮橘 hover */
+    }
 
-          <!-- 檔案管理 -->
-          <div class="space-y-1">
-            <div
-              class="text-xs font-semibold text-indigo-200 uppercase tracking-wider px-3 py-2"
-            >
-              檔案與記錄
-            </div>
-            <a
-              href="{% url 'files:upload_list' %}"
-              class="sidebar-link flex items-center space-x-3 p-3 rounded-lg hover:bg-white/10 transition"
-            >
-              <svg
-                class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 11V3m0 8l3-3m-3 3L9 8m0 0V3m0 13h6a2 2 0 012 2v4H7v-4a2 2 0 012-2z"
-                />
-              </svg>
-              <span class="font-medium">檔案管理</span>
-            </a>
-            <a
-              href="{% url 'meeting:record_list' %}"
-              class="sidebar-link flex items-center space-x-3 p-3 rounded-lg hover:bg-white/10 transition"
-            >
-              <svg
-                class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"
-                />
-              </svg>
-              <span class="font-medium">會議記錄</span>
-            </a>
-          </div>
-        </nav>
+    footer {
+      transition: color 0.5s ease;
+    }
+  </style>
+</head>
 
-        <!-- 底部資訊 -->
-        <div class="mt-auto pt-6 border-t border-white/20 text-xs text-indigo-200">
-          <p>© 2025 行事曆系統</p>
-          <p class="mt-1">台北大學 Python 課程</p>
-        </div>
-      </aside>
-
-      <!-- 主內容 -->
-      <main class="flex-1 p-8">
-        {% block content %}
-        <!-- 各頁面內容插入區 -->
-        {% endblock %}
-      </main>
+<body class="min-h-screen flex flex-col transition-colors duration-700">
+  <!-- 🔹 導航列 -->
+  <nav id="navbar" class="navbar-day flex justify-between items-center px-8 py-4 sticky top-0 z-50">
+    <div class="flex items-center space-x-6 font-semibold text-lg">
+      <a href="{% url 'home' %}" class="hover:text-pink-500 transition">🏠 Home</a>
+      <a href="{% url 'personal_calendar' %}" class="hover:text-blue-500 transition">🪄 Personal</a>
     </div>
 
-    {% block extra_js %}{% endblock %}
-  </body>
+    <a href="#" class="px-3 py-1 rounded-lg bg-pink-400/90 text-white font-semibold hover:scale-105 transition">
+      🔐 登入
+    </a>
+  </nav>
+
+  <!-- 🔸 主內容區 -->
+  <main class="flex-1 px-6 md:px-12 py-10">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- 🔹 頁尾 -->
+  <footer class="text-center py-6 text-sm opacity-70">
+    © 2025 Planora — Dream, Plan, Create ✨
+  </footer>
+
+  <!-- ✨ 導航列自動切換（連動首頁模式） -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const navbar = document.getElementById("navbar");
+      const observer = new MutationObserver(() => {
+        if (document.body.classList.contains("home-night")) {
+          navbar.classList.remove("navbar-day");
+          navbar.classList.add("navbar-night");
+        } else {
+          navbar.classList.remove("navbar-night");
+          navbar.classList.add("navbar-day");
+        }
+      });
+
+      observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ["class"]
+      });
+    });
+  </script>
+</body>
 </html>

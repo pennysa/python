@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -21,14 +22,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(r$88@haow1+=uhc*-dw&)81z2-3lvn95dy5opny1q)f+yxt2u'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# --- 專案根路徑 ---
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-ALLOWED_HOSTS = []
+# --- 載入 .env ---
+load_dotenv(BASE_DIR / '.env')
 
-
+# --- 機密設定 ---
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,9 +42,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'apps.dataviz', 
-    'apps.timeline',   # ← 新 app 加這行
-    'apps.core'
+    #'apps.timeline',   # ← 新 app 加這行
+    'apps.core',
+    'apps.personal',
 ]
 
 MIDDLEWARE = [
