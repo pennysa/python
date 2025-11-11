@@ -1,0 +1,7 @@
+# 忽略虛擬環境與機密檔案
+venv/
+.env
+db.sqlite3
+__pycache__/
+*.pyc
+uploads/
