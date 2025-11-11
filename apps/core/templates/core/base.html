@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
@@ -17,8 +16,6 @@
       overflow-x: hidden;
       transition: background 1.5s ease, color 1s ease;
     }
-
-    /* 🌤️ 導航列樣式（白天） */
     #navbar.navbar-day {
       background: rgba(255, 255, 255, 0.75);
       color: #1e293b;
@@ -26,8 +23,6 @@
       backdrop-filter: blur(10px);
       transition: background 1s ease, color 0.8s ease;
     }
-
-    /* 🌙 導航列樣式（夜間） */
     #navbar.navbar-night {
       background: rgba(40, 20, 60, 0.6);
       color: #f8fafc;
@@ -35,23 +30,10 @@
       backdrop-filter: blur(10px);
       transition: background 1s ease, color 0.8s ease;
     }
-
-    /* hover 效果 */
-    #navbar a {
-      transition: color 0.4s ease;
-    }
-
-    body.home-day #navbar a:hover {
-      color: #f472b6; /* 粉色 hover */
-    }
-
-    body.home-night #navbar a:hover {
-      color: #ffcc88; /* 夜間亮橘 hover */
-    }
-
-    footer {
-      transition: color 0.5s ease;
-    }
+    #navbar a { transition: color 0.4s ease; }
+    body.home-day #navbar a:hover { color: #f472b6; }
+    body.home-night #navbar a:hover { color: #ffcc88; }
+    footer { transition: color 0.5s ease; }
   </style>
 </head>
 
@@ -63,12 +45,26 @@
       <a href="{% url 'personal_calendar' %}" class="hover:text-blue-500 transition">🪄 Personal</a>
     </div>
 
-    <a href="#" class="px-3 py-1 rounded-lg bg-pink-400/90 text-white font-semibold hover:scale-105 transition">
-      🔐 登入
-    </a>
-  </nav>
+    <!-- 🔐 登入／登出 -->
+    {% if user.is_authenticated %}
+      <div class="flex items-center space-x-3">
+        <span class="text-gray-700 dark:text-gray-200 font-medium">
+          👋 {{ user.username }}
+        </span>
+        <a href="{% url 'account_logout' %}"
+           class="px-3 py-1 rounded-lg bg-gray-400/80 text-white font-semibold hover:bg-gray-500 transition">
+          🚪 登出
+        </a>
+      </div>
+    {% else %}
+      <a href="{% url 'account_login' %}"
+         class="px-3 py-1 rounded-lg bg-pink-400/90 text-white font-semibold hover:scale-105 transition">
+         🔐 登入
+      </a>
+    {% endif %}
+  </nav>  <!-- ✅ 千萬別忘這一行！關掉導航列 -->
 
-  <!-- 🔸 主內容區 -->
+  <!-- 🔸 主內容 -->
   <main class="flex-1 px-6 md:px-12 py-10">
     {% block content %}{% endblock %}
   </main>
@@ -78,7 +74,7 @@
     © 2025 Planora — Dream, Plan, Create ✨
   </footer>
 
-  <!-- ✨ 導航列自動切換（連動首頁模式） -->
+  <!-- ✨ 導航列自動切換 -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const navbar = document.getElementById("navbar");
@@ -91,12 +87,10 @@
           navbar.classList.add("navbar-day");
         }
       });
-
-      observer.observe(document.body, {
-        attributes: true,
-        attributeFilter: ["class"]
-      });
+      observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
     });
   </script>
 </body>
 </html>
+
+

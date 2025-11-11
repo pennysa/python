@@ -12,6 +12,8 @@ urlpatterns = [
 
     # ⚙️ 管理後台
     path('admin/', admin.site.urls),
+    # allauth 的所有 URLs
+    path('accounts/', include('allauth.urls')), 
 ]
 
 if settings.DEBUG:
