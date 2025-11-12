@@ -1,11 +1,12 @@
 """
 Django base settings for Planora project.
 """
-
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-import dj_database_url  # 讓 DATABASE_URL 自動解析
+import dj_database_url
+from django.urls import reverse_lazy
+from django.contrib.messages import constants as messages
 
 # === 專案根路徑 ===
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -13,32 +14,35 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # === 載入環境變數 ===
 load_dotenv(BASE_DIR / '.env')
 
-# === 機密設定 ===
-SECRET_KEY = os.getenv('SECRET_KEY')
+# === 基本設定 ===
+SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
 # === 安裝的應用 ===
 INSTALLED_APPS = [
+    # Django 內建模組
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites',  # allauth 需要
+    'django.contrib.sites',
 
-    # 🌈 自家 app
+    # Planora 應用
     'apps.core',
     'apps.personal',
     'apps.accounts',
 
-    # 🌐 allauth 模組
+    # 第三方登入（Allauth）
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
 ]
+
+SITE_ID = 1
 
 # === 中介層 ===
 MIDDLEWARE = [
@@ -50,12 +54,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware',  # allauth 需要
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
 
-# === 模板設定 ===
+# === 模板 ===
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -76,24 +80,28 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # === 資料庫設定 ===
 DATABASES = {
-    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL', f"sqlite:///{BASE_DIR / 'db.sqlite3'}"))
 }
 
 # === 認證設定 ===
 AUTH_USER_MODEL = 'accounts.User'
-
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-# === allauth 設定（新版語法）===
-SITE_ID = 1
-ACCOUNT_LOGIN_METHODS = {"email", "username"}
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+# === Allauth 登入設定 ===
+ACCOUNT_LOGIN_METHODS = {"username", "email"}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+ACCOUNT_LOGOUT_ON_GET =  False
+ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = True
+
+# ✅ 使用 reverse_lazy 確保 Django 在啟動後再反解 URL（不會出現命名找不到的情況）
+LOGIN_REDIRECT_URL = reverse_lazy('core:home')
+LOGOUT_REDIRECT_URL = reverse_lazy('core:home')
+ACCOUNT_LOGOUT_REDIRECT_URL = reverse_lazy('core:home')
+LOGIN_URL = reverse_lazy('account_login')
 
 # === Google OAuth 設定 ===
 SOCIALACCOUNT_PROVIDERS = {
@@ -113,9 +121,7 @@ SOCIALACCOUNT_PROVIDERS = {
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STORAGES = {
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
 
 MEDIA_URL = '/media/'
@@ -127,7 +133,7 @@ TIME_ZONE = 'Asia/Taipei'
 USE_I18N = True
 USE_TZ = False
 
-# === 密碼強度 ===
+# === 密碼驗證 ===
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -136,3 +142,14 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+from django.contrib.messages import constants as messages
+
+MESSAGE_TAGS = {
+    messages.DEBUG: 'debug',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'error',
+}

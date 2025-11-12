@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     # 'apps.timeline',   # ✅ 團體共編行事曆
     'apps.personal',   # ✅ 個人行事曆
     #'apps.meetings',   # ✅ 會議記錄
+    'apps.accounts',
 ]
 
 # === 中介層 ===
@@ -97,3 +98,8 @@ MEDIA_ROOT = BASE_DIR / 'uploads'
 
 # === 預設主鍵型態 ===
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# === 登入 / 登出導向設定 ===
+LOGIN_REDIRECT_URL = 'core:home'     # 登入後導回首頁
+LOGOUT_REDIRECT_URL = 'core:home'    # 登出後導回首頁
+LOGIN_URL = 'accounts:login'          # 若有用 allauth 登入系統

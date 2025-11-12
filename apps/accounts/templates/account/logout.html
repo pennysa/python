@@ -1,31 +1,87 @@
-{% extends "core/base.html" %} 
-{% block title %}登出{% endblock %}
+{% extends "core/base.html" %}
+{% block title %}登出 | Planora{% endblock %}
 {% block content %}
-    <div class="max-w-md mx-auto mt-12">
-      <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div class="bg-gradient-to-r from-red-600 to-pink-600 px-6 py-4">
-          <h3 class="text-center text-2xl font-bold text-white">登出確認</h3>
-        </div>
-        <div class="p-6 text-center">
-          <p class="text-gray-700 mb-6">確定要登出嗎?</p>
-    
-          <form method="post" class="space-y-3">
-            {% csrf_token %}
-            <button
-              type="submit"
-              class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200"
-            >
-              登出
-            </button>
-            <a
-              href="{% url 'core:home' %}"
-              class="block w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200"
-            >
-              取消
-            </a>
-          </form>
-        </div>
-      </div>
+
+<div class="relative min-h-screen flex justify-center items-center px-6 py-16 overflow-y-auto">
+  <!-- 💧 柔霧背景 -->
+  <div class="logout-bg fixed inset-0 z-0"></div>
+
+  <!-- 💎 登出卡片 -->
+  <div class="logout-card relative z-10 max-w-md w-full rounded-2xl shadow-lg overflow-hidden backdrop-blur-xl border border-white/20 animate-float">
+    <div class="bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 py-5 text-center shadow-sm">
+      <h3 class="text-3xl font-bold text-white tracking-wide drop-shadow-md">🌙 登出確認</h3>
     </div>
-    {% endblock %}
-    
+
+    <div class="p-8 text-center">
+      <p class="text-gray-700 dark:text-gray-300 text-lg mb-6">
+        確定要離開 Planora 嗎？<br>別擔心，你隨時都能回來 🪄
+      </p>
+
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <button
+          type="submit"
+          class="logout-btn w-full text-white font-semibold py-3 px-4 rounded-xl transition duration-300 transform hover:scale-[1.03]">
+          🚪 確認登出
+        </button>
+
+        <a href="{% url 'core:home' %}"
+           class="cancel-btn block w-full text-white font-semibold py-3 px-4 rounded-xl transition duration-300 transform hover:scale-[1.03]">
+          🌸 取消
+        </a>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+/* 🌫 背景柔霧藍綠 */
+.logout-bg {
+  background: linear-gradient(145deg, #dff9f2, #c7e4f8);
+  backdrop-filter: blur(14px);
+}
+
+/* 💎 卡片質感：略降透明避免反光 */
+.logout-card {
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: 1.25rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s ease;
+}
+body.home-night .logout-card {
+  background: rgba(25, 30, 50, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 20px rgba(94, 234, 212, 0.3);
+}
+
+/* 🌈 登出按鈕：藍綠柔霧 */
+.logout-btn {
+  background: linear-gradient(135deg, #38bdf8, #5eead4);
+  box-shadow: 0 4px 10px rgba(56, 189, 248, 0.3);
+}
+.logout-btn:hover {
+  background: linear-gradient(135deg, #0ea5e9, #14b8a6);
+  box-shadow: 0 5px 16px rgba(56, 189, 248, 0.4);
+}
+
+/* 🩶 取消按鈕：霧灰藍 */
+.cancel-btn {
+  background: linear-gradient(135deg, #94a3b8, #64748b);
+  box-shadow: 0 4px 8px rgba(148, 163, 184, 0.25);
+}
+.cancel-btn:hover {
+  background: linear-gradient(135deg, #60a5fa, #818cf8);
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.4);
+}
+
+/* 💫 浮動動畫 */
+@keyframes floatCard {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+.animate-float {
+  animation: floatCard 5s ease-in-out infinite;
+}
+</style>
+
+{% endblock %}

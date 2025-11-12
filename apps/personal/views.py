@@ -33,8 +33,9 @@ def personal_calendar(request):
 def get_events(request):
     events = Event.objects.all().order_by("start")
 
-    data = [
-        {
+    data = []
+    for e in events:
+        data.append({
             "id": e.id,
             "title": e.title,
             "start": e.start.isoformat(),
@@ -42,16 +43,15 @@ def get_events(request):
             "backgroundColor": e.display_color,
             "borderColor": e.display_color,
             "textColor": "#1e293b",
+            "allDay": True,  # ✅ 全部事件都顯示在整天格上方
             "extendedProps": {
                 "note": e.note,
                 "tag": e.tag,
                 "priority": e.priority,
                 "is_completed": e.is_completed,
                 "true_color": e.color,
-            }
-        }
-        for e in events
-    ]
+            },
+        })
 
     return JsonResponse(data, safe=False)
 

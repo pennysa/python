@@ -422,7 +422,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
 
 
-    events:"{% url 'get_events' %}",
+    events:"{% url 'personal:get_events' %}",
 
     /* ✅ 事件 pill */
     eventContent(arg){
@@ -493,7 +493,7 @@ document.addEventListener("DOMContentLoaded", function(){
      新增 API
      ============================ */
   function addEventAPI(){
-    fetch("{% url 'add_event' %}",{
+    fetch("{% url 'personal:add_event' %}",{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
       body:JSON.stringify({
@@ -597,7 +597,7 @@ document.addEventListener("DOMContentLoaded", function(){
      七日任務清單
      ============================ */
   function loadTasks(){
-    fetch("{% url 'get_events' %}")
+    fetch("{% url 'personal:get_events' %}")
       .then(res=>res.json())
       .then(events=>{
         const now=new Date();

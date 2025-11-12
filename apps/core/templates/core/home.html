@@ -19,19 +19,20 @@
   <p class="text-lg md:text-xl px-4 md:px-0">一起規劃你的時間・任務與夢想 ✨</p>
 
   <!-- 📅 主按鈕區 -->
-  <div class="flex flex-col items-center justify-center gap-6 md:gap-10 mt-10 md:mt-14">
-    <a href="{% url 'personal_calendar' %}"
-       class="main-btn px-8 md:px-10 py-3 md:py-4 rounded-3xl text-white text-lg md:text-xl font-semibold">
-      🪄 Personal Calendar
-    </a>
-
-    <!-- 🌗 模式切換按鈕（改成自然跟隨主按鈕） -->
-    <button id="homeThemeToggle"
-            class="bg-white/85 text-gray-800 rounded-full px-6 py-2 font-semibold shadow-md hover:scale-105 transition">
-      🌞 日間模式
-    </button>
-  </div>
-</div>
+    <!-- 📅 主按鈕區 -->
+    <div class="flex flex-col items-center justify-center gap-6 md:gap-8 mt-10 md:mt-14">
+      <a href="{% url 'personal:personal_calendar' %}"
+        class="main-btn px-8 md:px-10 py-3 md:py-4 rounded-3xl text-white text-lg md:text-xl font-semibold">
+        🪄 Personal Calendar
+      </a>
+  
+      <!-- 🌗 模式切換按鈕 -->
+      <button id="homeThemeToggle"
+              class="bg-white/85 text-gray-800 rounded-full px-6 py-2 font-semibold shadow-md hover:scale-105 transition">
+        🌞 日間模式
+      </button>
+    </div>
+  
 
 
 <!-- 🌈 樣式與動畫 -->

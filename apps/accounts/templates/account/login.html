@@ -1,111 +1,188 @@
 {% extends "core/base.html" %}
 {% load socialaccount %}
 
-{% block title %}登入{% endblock %}
+{% block title %}登入 | Planora ✨{% endblock %}
+
 {% block content %}
-    <div class="max-w-md mx-auto mt-12">
-      <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
-          <h3 class="text-center text-2xl font-bold text-white">登入</h3>
+<div class="relative min-h-screen py-12 px-4 sm:px-6 lg:px-8 overflow-y-auto">
+
+  <!-- ✨ 星空背景 -->
+  <div class="stars fixed inset-0 z-0"></div>
+  <div class="glow-overlay fixed inset-0 z-0"></div>
+
+  <!-- 🪞 登入卡片 -->
+  <div class="glass-card max-w-md mx-auto relative z-10 mt-10 mb-16 shadow-2xl">
+    <div class="bg-gradient-to-r from-indigo-600 to-pink-500 py-5 text-center">
+      <h2 class="text-3xl font-bold text-white tracking-wide">🔐 登入 Planora</h2>
+    </div>
+
+    <div class="p-8">
+      <!-- Google 登入 -->
+      <a href="{% provider_login_url 'google' %}"
+         class="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600
+                text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md transition">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 
+                   1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 
+                   3.28-4.74 3.28-8.09z" />
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 
+                   1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 
+                   20.53 7.7 23 12 23z" />
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 
+                   8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 
+                   14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 
+                   2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+        </svg>
+        使用 Google 登入
+      </a>
+
+      <div class="my-6 text-center text-gray-400 font-medium">或</div>
+
+      {% if form.non_field_errors %}
+        <div class="mb-4 text-center text-red-600 font-medium">
+          {{ form.non_field_errors }}
         </div>
-        <div class="p-6">
-          <!-- Google 登入按鈕 -->
-          <div class="mb-4">
-            <a
-              href="{% provider_login_url 'google' %}"
-              class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center"
-            >
-              <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-              使用 Google 登入
-            </a>
-          </div>
-    
-          <div class="text-center my-4">
-            <span class="text-gray-500">或</span>
-          </div>
-    
-          <!-- 一般登入表單 -->
-          <form method="post">
-            {% csrf_token %}
-    
-            <div class="mb-4">
-              <label for="id_login" class="block text-gray-700 font-medium mb-2">
-                帳號 (Email 或 Username)
-              </label>
-              <input
-                type="text"
-                name="login"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                id="id_login"
-                required
-              />
-            </div>
-    
-            <div class="mb-4">
-              <label for="id_password" class="block text-gray-700 font-medium mb-2">
-                密碼
-              </label>
-              <input
-                type="password"
-                name="password"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                id="id_password"
-                required
-              />
-            </div>
-    
-            <div class="mb-4 flex items-center">
-              <input
-                type="checkbox"
-                name="remember"
-                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                id="id_remember"
-              />
-              <label class="ml-2 text-gray-700" for="id_remember">記住我</label>
-            </div>
-    
-            <button
-              type="submit"
-              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200"
-            >
-              登入
-            </button>
-          </form>
-    
-          <div class="border-t border-gray-200 my-6"></div>
-    
-          <div class="text-center text-gray-600 space-y-2">
-            <p>
-              還沒有帳號?
-              <a
-                href="{% url 'account_signup' %}"
-                class="text-indigo-600 hover:text-indigo-800 font-medium"
-                >註冊</a
-              >
-            </p>
-            <p>
-              <a
-                href="{% url 'account_reset_password' %}"
-                class="text-indigo-600 hover:text-indigo-800 font-medium"
-                >忘記密碼?</a
-              >
-            </p>
-          </div>
+      {% endif %}
+
+      {% if form.errors %}
+        <div class="mb-4 text-center text-red-500">
+          ⚠️ 登入錯誤：{{ form.errors }}
         </div>
+      {% endif %}
+
+      <!-- 登入表單 -->
+      <form method="post" action="{% url 'account_login' %}">
+        {% csrf_token %}
+        <div class="mb-5">
+          <label for="id_login" class="block font-medium mb-2">帳號 (Email 或 Username)</label>
+          <input type="text" name="login" id="id_login"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none
+                        focus:ring-2 focus:ring-indigo-500 bg-white/80 dark:bg-gray-800/70"
+                 required />
+        </div>
+
+        <div class="mb-5">
+          <label for="id_password" class="block font-medium mb-2">密碼</label>
+          <input type="password" name="password" id="id_password"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none
+                        focus:ring-2 focus:ring-indigo-500 bg-white/80 dark:bg-gray-800/70"
+                 required />
+        </div>
+
+        <div class="mb-6 flex items-center justify-between text-sm">
+          <label class="flex items-center">
+            <input type="checkbox" name="remember" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+            <span class="ml-2">記住我</span>
+          </label>
+          <a href="{% url 'account_reset_password' %}" class="text-indigo-500 hover:text-indigo-700 font-medium">忘記密碼？</a>
+        </div>
+
+        <button type="submit"
+                class="btn-gradient w-full text-white font-bold py-3 px-4 rounded-xl shadow-md transition">
+          登入
+        </button>
+      </form>
+
+      <div class="mt-6 text-center">
+        還沒有帳號？
+        <a href="{% url 'account_signup' %}" class="text-indigo-600 hover:text-indigo-800 font-semibold">
+          立即註冊
+        </a>
       </div>
     </div>
-    {% endblock %}
+  </div>
+</div>
+
+<style>
+  /* ✅ 允許滾動 */
+  body { overflow-x: hidden; overflow-y: auto; }
+
+  /* 🌤️ 白天柔光背景 */
+  body.home-day {
+    background: linear-gradient(135deg, #fce7f3 0%, #e0e7ff 100%);
+    color: #1e293b;
+  }
+
+  /* 🌙 夜間星空背景 */
+  body.home-night {
+    background: radial-gradient(circle at top left, #4c1d95 0%, #1e1b4b 40%, #0f172a 100%);
+    color: #f8fafc;
+  }
+
+  /* ✨ 星空效果 */
+  .stars { position: fixed; inset: 0; overflow: hidden; z-index: 0; }
+  .star {
+    position: absolute; width: 2px; height: 2px;
+    background: white; border-radius: 50%;
+    opacity: 0.8; animation: twinkle 3s infinite ease-in-out;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.3); }
+  }
+
+  /* 🌌 柔光層 */
+  .glow-overlay {
+    background: radial-gradient(circle at bottom right, rgba(147,51,234,0.2), rgba(30,27,75,0.4));
+    mix-blend-mode: screen;
+  }
+
+  /* 💎 玻璃卡片 */
+  .glass-card {
+    backdrop-filter: blur(18px);
+    border-radius: 1.25rem;
+    transition: all 0.5s ease;
+  }
+  body.home-day .glass-card {
+    background: rgba(255,255,255,0.75);
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+  body.home-night .glass-card {
+    background: rgba(45,30,70,0.55);
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 0 25px rgba(147,51,234,0.4);
+  }
+
+  /* 🌈 登入按鈕 */
+  .btn-gradient {
+    background: linear-gradient(to right, #6366f1, #a855f7);
+    transition: all 0.3s ease;
+  }
+  body.home-night .btn-gradient {
+    background: linear-gradient(to right, #7c3aed, #db2777);
+    box-shadow: 0 0 12px rgba(219, 39, 119, 0.5);
+  }
+  .btn-gradient:hover {
+    transform: scale(1.05);
+    opacity: 0.95;
+  }
+</style>
+
+<script>
+  /* ✨ 生成星空 */
+  const starsContainer = document.querySelector(".stars");
+  for (let i = 0; i < 90; i++) {
+    const star = document.createElement("div");
+    star.classList.add("star");
+    star.style.left = `${Math.random() * 100}%`;
+    star.style.top = `${Math.random() * 100}%`;
+    star.style.animationDelay = `${Math.random() * 3}s`;
+    starsContainer.appendChild(star);
+  }
+
+  /* ☀️🌙 根據主頁主題同步模式 */
+  document.addEventListener("DOMContentLoaded", () => {
+    const mode = localStorage.getItem("planoraTheme");
+    if (mode === "night") {
+      document.body.classList.add("home-night");
+    } else {
+      document.body.classList.add("home-day");
+    }
+  });
+</script>
+{% endblock %}
+
+
+
     
