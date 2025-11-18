@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -174,8 +175,18 @@
       observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
     });
   </script>
+
+
+
+<!-- 全站共用 JS（先載 utils） -->
+<script src="{% static 'core/js/utils.js' %}"></script>
+
+<!-- 各頁面的 JS -->
+{% block extra_js %}{% endblock %}
+
 </body>
 </html>
+
 
 
 
