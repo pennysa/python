@@ -29,7 +29,7 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 # 安裝的 App
 # ============================================================
 INSTALLED_APPS = [
-    # Django 內建
+    #"daphne",  # 必須放在最前面！# Django 內建
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -48,6 +48,10 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
+
+
+    # Channels（WebSocket 支援）
+    #"channels",
 ]
 
 SITE_ID = 1
@@ -191,3 +195,20 @@ MESSAGE_TAGS = {
 }
 
 
+# ==========================================
+# ASGI 應用設定（支援 WebSocket）
+# ==========================================
+#ASGI_APPLICATION = 'config.asgi.application'
+
+# ==========================================
+# Channel Layer 設定 - 使用 Redis
+# ==========================================
+# 直接使用 REDIS_URI，這樣密碼、host、port 都會自動帶入
+#CHANNEL_LAYERS = {
+#    'default': {
+#        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#        'CONFIG': {
+#            'hosts': [REDIS_URI],  # 使用與 Cache 相同的連線設定
+#        },
+#    },
+#}

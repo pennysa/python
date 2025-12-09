@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
 
     // ================================
-    // 取得 HTML 元素（與你的 calendar.html 完全相同）
+    // 取得 HTML 元素
     // ================================
     const calendarEl = document.getElementById("calendar");
     const taskList = document.getElementById("taskList");
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // ================================
-    // 色票選擇（你的 HTML 已支援）
+    // 色票選擇
     // ================================
     document.querySelectorAll(".color-dot").forEach(dot => {
         dot.onclick = () => {
@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
         events: "/personal/events/",
 
 
-        // === 事件呈現（粉色 pill） ===
+        // === 粉色小 pill ===
         eventContent(arg) {
             let pill = document.createElement("div");
             pill.classList.add("fc-event-pink-pill");
@@ -118,17 +118,21 @@ document.addEventListener("DOMContentLoaded", function () {
             modalBg.style.display = "flex";
         },
 
-        eventDrop(info) { updateEvent(info.event); },
-        eventResize(info) { updateEvent(info.event); },
+        eventDrop(info) { saveUpdatedEvent(info.event); },
+        eventResize(info) { saveUpdatedEvent(info.event); },
     });
 
     calendar.render();
 
+
+    // ================================
+    // Date Picker
+    // ================================
     flatpickr("#eventDate", { dateFormat: "Y-m-d" });
 
 
     // ================================
-    // 新增 API
+    // 新增事件 API
     // ================================
     function addEventAPI() {
         fetch("/personal/add/", {
@@ -151,9 +155,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // ================================
-    // 更新 API
+    // 更新事件 API（拖曳或儲存時）
     // ================================
-    function updateEvent(ev) {
+    function saveUpdatedEvent(ev) {
         fetch(`/personal/update/${ev.id}/`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -173,7 +177,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // ================================
-    // 刪除 API
+    // 刪除事件
     // ================================
     deleteBtn.onclick = () => {
         if (!currentEvent) return;
@@ -197,17 +201,16 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         if (currentEvent) {
-            updateEvent({
-                id: currentEvent.id,
-                title: eventTitle.value,
-                startStr: eventDate.value,
-                endStr: eventDate.value,
-                extendedProps: {
-                    note: eventNote.value,
-                    true_color: selectedColor,
-                    priority: eventPriority.value,
-                }
-            });
+            // **更新 FullCalendar 事件物件（不會報錯）**
+            currentEvent.setProp("title", eventTitle.value);
+            currentEvent.setStart(eventDate.value);
+            currentEvent.setEnd(eventDate.value);
+
+            currentEvent.setExtendedProp("note", eventNote.value);
+            currentEvent.setExtendedProp("priority", eventPriority.value);
+            currentEvent.setExtendedProp("true_color", selectedColor);
+
+            saveUpdatedEvent(currentEvent);
             modalBg.style.display = "none";
         } else {
             addEventAPI();
@@ -219,11 +222,11 @@ document.addEventListener("DOMContentLoaded", function () {
     // Modal 關閉
     // ================================
     cancelBtn.onclick = () => modalBg.style.display = "none";
-    modalBg.onclick = (e) => { if (e.target === modalBg) modalBg.style.display = "none"; };
+    modalBg.onclick = e => { if (e.target === modalBg) modalBg.style.display = "none"; };
 
 
     // ================================
-    // 浮動按鈕 → 開啟新增事件
+    // 新增事件按鈕
     // ================================
     addEventBtn.onclick = () => {
         currentEvent = null;
@@ -245,7 +248,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // ================================
-    // 七日任務清單載入
+    // 七日任務清單
     // ================================
     function loadTasks() {
         fetch("/personal/events/")
@@ -260,16 +263,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     return d >= now && d <= seven;
                 });
 
+                // 依優先度排序（高 → 中 → 低）
                 const order = { "高": 1, "中": 2, "低": 3 };
                 filtered.sort((a, b) => order[a.extendedProps.priority] - order[b.extendedProps.priority]);
 
                 taskList.innerHTML = filtered.length
                     ? ""
-                    : "<p class='opacity-80 italic'>（未來七天沒有任務 ✨）</p>";
+                    : "<p class='opacity-80 italic'>(未來七天沒有任務 ✨)</p>";
 
                 filtered.forEach(ev => {
                     let row = document.createElement("div");
-                    row.className = "task-item flex items-center space-x-2 py-1";
+                    row.className = "task-item flex items-center gap-2 py-1 handwriting";
 
                     let checkbox = document.createElement("input");
                     checkbox.type = "checkbox";
@@ -281,8 +285,14 @@ document.addEventListener("DOMContentLoaded", function () {
                         });
                     };
 
+                    // ✔ 日期格式成品：01/30（四）
+                    let d = new Date(ev.start);
+                    let mm = String(d.getMonth() + 1).padStart(2, "0");
+                    let dd = String(d.getDate()).padStart(2, "0");
+                    let weekday = ["日", "一", "二", "三", "四", "五", "六"][d.getDay()];
+
                     let text = document.createElement("span");
-                    text.textContent = `${ev.start.slice(5)}｜${ev.title}`;
+                    text.textContent = `${mm}/${dd}（${weekday}）｜${ev.title}`;
 
                     row.appendChild(checkbox);
                     row.appendChild(text);
@@ -292,5 +302,4 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     loadTasks();
-
 });

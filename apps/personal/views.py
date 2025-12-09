@@ -43,15 +43,19 @@ def get_events(request):
 
     data = []
     for e in events:
+
         data.append({
             "id": e.id,
             "title": e.title,
             "start": e.start.isoformat(),
             "end": e.end.isoformat() if e.end else None,
+
+            # 顏色
             "backgroundColor": e.display_color,
             "borderColor": e.display_color,
             "textColor": "#1e293b",
-            "allDay": True,
+
+            # ❗ 全部移除 allDay=True，讓 FullCalendar 自動判斷
             "extendedProps": {
                 "note": e.note,
                 "tag": e.tag,
@@ -80,7 +84,7 @@ def add_event(request):
     end = parse_datetime(data.get("end")) or start
 
     event = Event.objects.create(
-        user=request.user,         # ← 綁定使用者（必須）
+        user=request.user,
         title=data.get("title"),
         start=start,
         end=end,
@@ -90,7 +94,7 @@ def add_event(request):
         priority=data.get("priority", "中"),
     )
 
-    # ⭐ 回傳完整事件（FullCalendar 才能立即渲染）
+    # ⭐ 回傳完整事件（不含 allDay）
     return JsonResponse({
         "success": True,
         "event": {
@@ -98,10 +102,11 @@ def add_event(request):
             "title": event.title,
             "start": event.start.isoformat(),
             "end": event.end.isoformat() if event.end else None,
+
             "backgroundColor": event.display_color,
             "borderColor": event.display_color,
             "textColor": "#1e293b",
-            "allDay": True,
+
             "extendedProps": {
                 "note": event.note,
                 "tag": event.tag,
@@ -120,8 +125,7 @@ def add_event(request):
 @login_required
 def update_event(request, event_id):
 
-    event = get_object_or_404(Event, id=event_id, user=request.user)  
-    # ↑ 限制：只能修改自己的事件
+    event = get_object_or_404(Event, id=event_id, user=request.user)
 
     if request.method != "POST":
         return JsonResponse({"success": False})
@@ -136,7 +140,7 @@ def update_event(request, event_id):
     event.priority = data.get("priority", event.priority)
     event.save()
 
-    # ⭐ 必須回傳完整事件給前端更新！
+    # ⭐ 回傳最新事件（不含 allDay）
     return JsonResponse({
         "success": True,
         "event": {
@@ -144,10 +148,11 @@ def update_event(request, event_id):
             "title": event.title,
             "start": event.start.isoformat(),
             "end": event.end.isoformat() if event.end else None,
+
             "backgroundColor": event.display_color,
             "borderColor": event.display_color,
             "textColor": "#1e293b",
-            "allDay": True,
+
             "extendedProps": {
                 "note": event.note,
                 "tag": event.tag,

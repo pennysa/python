@@ -6,6 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Planora ✨ 個人行事曆（粉系）</title>
 
+<!-- 🎀 手寫字體（正確位置） -->
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Kosugi+Maru&display=swap" rel="stylesheet">
+
 <!-- FullCalendar -->
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
@@ -19,9 +22,18 @@
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
+
+  /* 高級手寫風（近期任務用） */
+.handwriting {
+  font-family: 'Klee One', 'Kosugi Maru', 'Noto Sans TC', sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
+}
+
 /* ========================================= */
 /* 字體 & 動畫 */
 /* ========================================= */
+
 body {
   font-family: 'Quicksand','Noto Sans TC',sans-serif;
   transition: background 1.5s ease, color 1s ease;
@@ -302,9 +314,20 @@ body.night .fc-toolbar-title {
   <div class="modal-box">
     <h2 id="modal-title" class="text-xl font-bold mb-3">📝 新增事件</h2>
 
+    <!-- 事件名稱 -->
     <input type="text" id="eventTitle" placeholder="事件名稱">
+
+    <!-- 日期（由點日曆決定） -->
     <input type="text" id="eventDate" placeholder="選擇日期">
 
+    <!-- 開始時間 -->
+    <label class="text-sm font-semibold mt-2">開始時間</label>
+    <input type="text" id="eventStartTime" placeholder="09:00">
+
+    <!-- 結束時間 -->
+    <label class="text-sm font-semibold mt-2">結束時間</label>
+    <input type="text" id="eventEndTime" placeholder="10:00">
+    
     <div class="color-pick-wrapper" id="colorOptions">
       <div class="color-dot" data-color="#fda4af" style="background:#fda4af"></div>
       <div class="color-dot" data-color="#fbb6ce" style="background:#fbb6ce"></div>
@@ -334,321 +357,383 @@ body.night .fc-toolbar-title {
 </div>
 
 <script>
-
-/* ========================================= */
-/* 星空 */
-/* ========================================= */
-function createStars() {
-  const sky = document.getElementById("stars");
-  for (let i = 0; i < 90; i++) {
-    const s = document.createElement("div");
-    s.classList.add("star");
-    s.style.top = Math.random()*100 + "vh";
-    s.style.left = Math.random()*100 + "vw";
-    s.style.animationDelay = Math.random()*2 + "s";
-    sky.appendChild(s);
+  /* ========================================= */
+  /* 星空 */
+  /* ========================================= */
+  function createStars() {
+    const sky = document.getElementById("stars");
+    for (let i = 0; i < 90; i++) {
+      const s = document.createElement("div");
+      s.classList.add("star");
+      s.style.top = Math.random() * 100 + "vh";
+      s.style.left = Math.random() * 100 + "vw";
+      s.style.animationDelay = Math.random() * 2 + "s";
+      sky.appendChild(s);
+    }
   }
-}
-createStars();
-
-/* ========================================= */
-/* 日夜模式 */
-/* ========================================= */
-const themeBtn = document.getElementById("themeToggle");
-const navbar = document.getElementById("navbar");
-
-themeBtn.onclick = () => {
-  document.body.classList.toggle("night");
-  document.body.classList.toggle("day");
-
-  const isNight = document.body.classList.contains("night");
-  themeBtn.textContent = isNight ? "☀️ 日間模式" : "🌙 夜間模式";
-
-  navbar.className = isNight
-    ? "navbar navbar-night flex justify-between items-center px-6 py-3"
-    : "navbar navbar-day flex justify-between items-center px-6 py-3";
-};
-
-
-/* ========================================= */
-/* FullCalendar */
-/* ========================================= */
-document.addEventListener("DOMContentLoaded", function(){
-
-  const calendarEl = document.getElementById("calendar");
-  const taskList = document.getElementById("taskList");
-
-  const modalBg = document.getElementById("modal-bg");
-  const modalTitle = document.getElementById("modal-title");
-
-  const eventTitle = document.getElementById("eventTitle");
-  const eventDate = document.getElementById("eventDate");
-  const eventNote = document.getElementById("eventNote");
-  const eventPriority = document.getElementById("eventPriority");
-
-  const deleteBtn = document.getElementById("deleteBtn");
-  const saveBtn = document.getElementById("saveBtn");
-  const cancelBtn = document.getElementById("cancelBtn");
-  const addEventBtn = document.getElementById("addEventBtn");
-
-  let selectedColor = "#fda4af";
-  let currentEvent = null;
-
-  /* 色票 */
-  document.querySelectorAll(".color-dot").forEach(dot=>{
-    dot.onclick = () =>{
-      selectedColor = dot.dataset.color;
-      document.querySelectorAll(".color-dot").forEach(d=>d.classList.remove("selected"));
-      dot.classList.add("selected");
-    };
-  });
-
-  /* ================================
-     FullCalendar 實例化（帶 header）
-     ================================ */
-  const calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView:"dayGridMonth",
-    locale:"zh-tw",
-    editable:true,
-    selectable:true,
-    displayEventTime:true,
-    dayMaxEvents:true,
-    dayMaxEventRows:true,
-
-    /* ✅ ✅ ✅ 原生 FullCalendar Header */
-    headerToolbar: {
-      left: "prev today next",
-      center: "title",
-      right: "dayGridMonth,timeGridWeek,timeGridDay",
-    },
-
-
-
-    events:"{% url 'personal:get_events' %}",
-
-    /* ✅ 事件 pill */
-    eventContent(arg){
-      let pill=document.createElement("div");
-      pill.classList.add("fc-event-pink-pill");
-
-      pill.style.backgroundColor = arg.event.backgroundColor || arg.event.borderColor;
-      pill.textContent = arg.event.title;
-
-      if(arg.event.extendedProps.is_completed){
-        pill.style.opacity="0.6";
-        pill.style.textDecoration="line-through";
-      }
-      return {domNodes:[pill]};
-    },
-
-    /* ✅ 點擊事件 → 編輯 */
-    eventClick(info){
-      currentEvent=info.event;
-
-      modalTitle.textContent="✏️ 編輯事件";
-
-      eventTitle.value=info.event.title;
-      eventDate.value=info.event.startStr.slice(0,10);
-      eventNote.value=info.event.extendedProps.note;
-      eventPriority.value=info.event.extendedProps.priority;
-
-      selectedColor = info.event.extendedProps.true_color;
-
-      document.querySelectorAll(".color-dot").forEach(d=>{
-        d.classList.toggle("selected", d.dataset.color===selectedColor);
-      })
-
-      deleteBtn.classList.remove("hidden");
-      modalBg.style.display="flex";
-    },
-
-    /* ✅ 點擊日期 → 新增事件 */
-    dateClick(info){
-      currentEvent=null;
-
-      modalTitle.textContent="📝 新增事件";
-
-      eventTitle.value="";
-      eventDate.value=info.dateStr;
-      eventNote.value="";
-      eventPriority.value="中";
-
-      selectedColor="#fda4af";
-
-      document.querySelectorAll(".color-dot").forEach(d=>{
-        d.classList.toggle("selected", d.dataset.color===selectedColor);
-      })
-
-      deleteBtn.classList.add("hidden");
-      modalBg.style.display="flex";
-    },
-
-    eventDrop(info){ updateEvent(info.event); },
-    eventResize(info){ updateEvent(info.event); },
-
-  });
-
-  calendar.render();
-  flatpickr("#eventDate",{ dateFormat:"Y-m-d" });
-
-  /* ============================
-     新增 API
-     ============================ */
-  function addEventAPI(){
-    fetch("{% url 'personal:add_event' %}",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({
-        title: eventTitle.value,
-        start: eventDate.value,
-        end: eventDate.value,
-        note: eventNote.value,
-        color: selectedColor,
-        priority: eventPriority.value,
-      })
-    }).then(()=>{
-      calendar.refetchEvents();
-      loadTasks();
-      modalBg.style.display="none";
+  createStars();
+  
+  /* ========================================= */
+  /* 日夜模式 */
+  /* ========================================= */
+  const themeBtn = document.getElementById("themeToggle");
+  const navbar = document.getElementById("navbar");
+  
+  themeBtn.onclick = () => {
+    document.body.classList.toggle("night");
+    document.body.classList.toggle("day");
+  
+    const isNight = document.body.classList.contains("night");
+    themeBtn.textContent = isNight ? "☀️ 日間模式" : "🌙 夜間模式";
+  
+    navbar.className = isNight
+      ? "navbar navbar-night flex justify-between items-center px-6 py-3"
+      : "navbar navbar-day flex justify-between items-center px-6 py-3";
+  };
+  
+  /* ========================================= */
+  /* FullCalendar */
+  /* ========================================= */
+  document.addEventListener("DOMContentLoaded", function () {
+  
+    /* DOM */
+    const calendarEl = document.getElementById("calendar");
+    const taskList = document.getElementById("taskList");
+    const modalBg = document.getElementById("modal-bg");
+    const modalTitle = document.getElementById("modal-title");
+  
+    const eventTitle = document.getElementById("eventTitle");
+    const eventDate = document.getElementById("eventDate");
+    const eventNote = document.getElementById("eventNote");
+    const eventPriority = document.getElementById("eventPriority");
+  
+    /* 新時間欄位（只有時間） */
+    const eventStartTime = document.getElementById("eventStartTime");
+    const eventEndTime = document.getElementById("eventEndTime");
+  
+    const deleteBtn = document.getElementById("deleteBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const addEventBtn = document.getElementById("addEventBtn");
+  
+    let selectedColor = "#fda4af";
+    let currentEvent = null;
+  
+    /* 色票 */
+    document.querySelectorAll(".color-dot").forEach((dot) => {
+      dot.onclick = () => {
+        selectedColor = dot.dataset.color;
+        document.querySelectorAll(".color-dot").forEach((d) =>
+          d.classList.remove("selected")
+        );
+        dot.classList.add("selected");
+      };
     });
-  }
-
-  /* ============================
-     更新 API
-     ============================ */
-  function updateEvent(ev){
-    fetch(`/personal/update/${ev.id}/`,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({
-        title: ev.title,
-        start: ev.startStr.slice(0,10),
-        end: ev.endStr ? ev.endStr.slice(0,10) : ev.startStr.slice(0,10),
-        note: ev.extendedProps.note,
-        color: ev.extendedProps.true_color,
-        priority: ev.extendedProps.priority,
-      })
-    }).then(()=>{
-      calendar.refetchEvents();
-      loadTasks();
+  
+    /* flatpickr 初始化（只有時間） */
+    flatpickr("#eventStartTime", {
+      enableTime: true,
+      noCalendar: true,
+      dateFormat: "H:i",
     });
-  }
+  
+    flatpickr("#eventEndTime", {
+      enableTime: true,
+      noCalendar: true,
+      dateFormat: "H:i",
+    });
+  
+    /* ========================================= */
+    /* FullCalendar 實例化 */
+    /* ========================================= */
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: "dayGridMonth",
+      locale: "zh-tw",
+      editable: true,
+      selectable: true,
+      displayEventTime: true,
+      dayMaxEvents: true,
+  
+      headerToolbar: {
+        left: "prev today next",
+        center: "title",
+        right: "dayGridMonth,timeGridWeek,timeGridDay",
+      },
+  
+      events: "{% url 'personal:get_events' %}",
+  
+      eventContent(arg) {
+        const pill = document.createElement("div");
+        pill.classList.add("fc-event-pink-pill");
+        pill.style.backgroundColor =
+          arg.event.backgroundColor || arg.event.borderColor;
+        pill.textContent = arg.event.title;
+  
+        if (arg.event.extendedProps.is_completed) {
+          pill.style.opacity = "0.6";
+          pill.style.textDecoration = "line-through";
+        }
+        return { domNodes: [pill] };
+      },
+  
+      /* ========================================= */
+      /* 點擊事件 → 編輯 */
+      /* ========================================= */
+      eventClick(info) {
+        currentEvent = info.event;
+  
+        modalTitle.textContent = "✏️ 編輯事件";
+  
+        eventTitle.value = info.event.title;
+        eventDate.value = info.event.start.toISOString().slice(0, 10);
+        eventStartTime.value = info.event.start.toISOString().slice(11, 16);
+  
+        if (info.event.end) {
+          eventEndTime.value = info.event.end.toISOString().slice(11, 16);
+        } else {
+          eventEndTime.value = "";
+        }
+  
+        eventNote.value = info.event.extendedProps.note || "";
+        eventPriority.value = info.event.extendedProps.priority || "中";
+        selectedColor = info.event.extendedProps.true_color;
+  
+        document.querySelectorAll(".color-dot").forEach((d) =>
+          d.classList.toggle("selected", d.dataset.color === selectedColor)
+        );
+  
+        deleteBtn.classList.remove("hidden");
+        modalBg.style.display = "flex";
+      },
+  
+      /* ========================================= */
+      /* 點擊日期 → 新增事件 */
+      /* ========================================= */
+      dateClick(info) {
+        currentEvent = null;
+  
+        modalTitle.textContent = "📝 新增事件";
+  
+        eventTitle.value = "";
+        eventDate.value = info.dateStr;
+        eventStartTime.value = "";
+        eventEndTime.value = "";
+        eventNote.value = "";
+        eventPriority.value = "中";
+  
+        selectedColor = "#fda4af";
+        document.querySelectorAll(".color-dot").forEach((d) =>
+          d.classList.toggle("selected", d.dataset.color === selectedColor)
+        );
+  
+        deleteBtn.classList.add("hidden");
+        modalBg.style.display = "flex";
+      },
+  
+      /* ========================================= */
+      /* （4）拖曳或調整大小 → 自動同步事件與 modal */
+      /* ========================================= */
+      eventDrop(info) {
+        syncEventAfterMove(info.event);
+      },
+      eventResize(info) {
+        syncEventAfterMove(info.event);
+      },
+    });
+  
+    calendar.render();
+  
+    /* ========================================= */
+    /* （4）更新後同步事件物件資料 */
+    /* ========================================= */
+    function syncEventAfterMove(ev) {
+      const newStart = ev.start.toISOString();   // 2025-12-10T12:00:00Z
+      const newEnd   = ev.end ? ev.end.toISOString() : null;  // 2025-12-10T13:00:00Z
 
-  /* ============================
-     刪除 API
-     ============================ */
-  deleteBtn.onclick = () =>{
-    fetch(`/personal/delete/${currentEvent.id}/`,{method:"POST"})
-      .then(()=>{
+  
+      fetch(`/personal/update/${ev.id}/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: ev.title,
+          start: newStart,
+          end: newEnd,
+          note: ev.extendedProps.note,
+          color: ev.extendedProps.true_color,
+          priority: ev.extendedProps.priority,
+        }),
+      }).then(() => {
         calendar.refetchEvents();
         loadTasks();
-        modalBg.style.display="none";
-      })
-  }
-
-  /* ============================
-     Modal 控制
-     ============================ */
-  saveBtn.onclick = ()=>{
-    if(!eventTitle.value || !eventDate.value){
-      alert("請輸入完整資訊");
-      return;
+      });
     }
-
-    if(currentEvent){
-      updateEvent({
-        id: currentEvent.id,
-        title: eventTitle.value,
-        startStr: eventDate.value,
-        endStr: eventDate.value,
-        extendedProps:{
+  
+    /* ========================================= */
+    /* 新增事件 API */
+    /* ========================================= */
+    function addEventAPI() {
+      fetch("{% url 'personal:add_event' %}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: eventTitle.value,
+          start: `${eventDate.value} ${eventStartTime.value}`,
+          end: eventEndTime.value
+            ? `${eventDate.value} ${eventEndTime.value}:00`
+            : null,
           note: eventNote.value,
-          true_color: selectedColor,
+          color: selectedColor,
           priority: eventPriority.value,
-        }
+        }),
+      }).then(() => {
+        calendar.refetchEvents();
+        loadTasks();
+        modalBg.style.display = "none";
       });
-      modalBg.style.display="none";
-    }else{
-      addEventAPI();
     }
-  }
-
-  cancelBtn.onclick = ()=> modalBg.style.display="none";
-  modalBg.onclick = e => { if(e.target===modalBg) modalBg.style.display="none"; };
-
-  addEventBtn.onclick = ()=>{
-    currentEvent=null;
-
-    modalTitle.textContent="📝 新增事件";
-    eventTitle.value="";
-    eventDate.value="";
-    eventNote.value="";
-    eventPriority.value="中";
-
-    selectedColor="#fda4af";
-
-    document.querySelectorAll(".color-dot").forEach(d=>{
-      d.classList.toggle("selected", d.dataset.color===selectedColor);
-    })
-
-    deleteBtn.classList.add("hidden");
-    modalBg.style.display="flex";
-  };
-
-  /* ============================
-     七日任務清單
-     ============================ */
-  function loadTasks(){
-    fetch("{% url 'personal:get_events' %}")
-      .then(res=>res.json())
-      .then(events=>{
-        const now=new Date();
-        const seven=new Date(now.getTime()+7*86400*1000);
-
-        let filtered=events.filter(e=>{
-          if(e.extendedProps.is_completed) return false;
-          let d=new Date(e.start);
-          return d>=now && d<=seven;
-        });
-
-        const order = {"高":1,"中":2,"低":3};
-        filtered.sort((a,b)=>order[a.extendedProps.priority]-order[b.extendedProps.priority]);
-
-        taskList.innerHTML = filtered.length 
-          ? ""
-          : "<p class='opacity-80 italic'>（未來七天沒有任務 ✨）</p>";
-
-        filtered.forEach(ev=>{
-          let row=document.createElement("div");
-          row.className="task-item";
-
-          let checkbox=document.createElement("input");
-          checkbox.type="checkbox";
-          checkbox.className="task-checkbox";
-
-          checkbox.onclick = ()=>{
-            fetch(`/personal/toggle/${ev.id}/`,{method:"POST"}).then(()=>{
-              calendar.refetchEvents();
-              loadTasks();
-            });
-          };
-
-          let text=document.createElement("span");
-          text.textContent = `${ev.start.slice(5)}｜${ev.title}`;
-
-          row.appendChild(checkbox);
-          row.appendChild(text);
-          taskList.appendChild(row);
-        });
+  
+    /* ========================================= */
+    /* 更新事件 API */
+    /* ========================================= */
+    function updateEvent(ev) {
+      fetch(`/personal/update/${ev.id}/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: eventTitle.value,
+          start: `${eventDate.value} ${eventStartTime.value}`,
+          end: eventEndTime.value
+            ? `${eventDate.value} ${eventEndTime.value}:00`
+            : null,
+          note: eventNote.value,
+          color: selectedColor,
+          priority: eventPriority.value,
+        }),
+      }).then(() => {
+        calendar.refetchEvents();
+        loadTasks();
       });
-  }
+    }
+  
+    /* ========================================= */
+    /* 刪除 API */
+    /* ========================================= */
+    deleteBtn.onclick = () => {
+      fetch(`/personal/delete/${currentEvent.id}/`, { method: "POST" }).then(
+        () => {
+          calendar.refetchEvents();
+          loadTasks();
+          modalBg.style.display = "none";
+        }
+      );
+    };
+  
+    /* ========================================= */
+    /* Modal 控制 */
+    /* ========================================= */
+    saveBtn.onclick = () => {
+      if (!eventTitle.value || !eventDate.value || !eventStartTime.value) {
+        alert("請輸入完整資訊");
+        return;
+      }
+  
+      if (currentEvent) {
+        updateEvent(currentEvent);
+        modalBg.style.display = "none";
+      } else {
+        addEventAPI();
+      }
+    };
+  
+    cancelBtn.onclick = () => (modalBg.style.display = "none");
+    modalBg.onclick = (e) => {
+      if (e.target === modalBg) modalBg.style.display = "none";
+    };
+  
+    addEventBtn.onclick = () => {
+      currentEvent = null;
+  
+      modalTitle.textContent = "📝 新增事件";
+      eventTitle.value = "";
+      eventDate.value = "";
+      eventStartTime.value = "";
+      eventEndTime.value = "";
+      eventNote.value = "";
+      eventPriority.value = "中";
+  
+      selectedColor = "#fda4af";
+      document.querySelectorAll(".color-dot").forEach((d) =>
+        d.classList.toggle("selected", d.dataset.color === selectedColor)
+      );
+  
+      deleteBtn.classList.add("hidden");
+      modalBg.style.display = "flex";
+    };
+  
+    /* ========================================= */
+    /* 七日任務清單 */
+    /* ========================================= */
+    function loadTasks() {
+  fetch("{% url 'personal:get_events' %}")
+    .then((res) => res.json())
+    .then((events) => {
+      const now = new Date();
+      const seven = new Date(now.getTime() + 7 * 86400 * 1000);
 
-  loadTasks();
+      // 篩選：未完成 + 七天內
+      let filtered = events.filter((e) => {
+        if (e.extendedProps.is_completed) return false;
 
-}); 
-</script>
+        // 修正日期格式
+        let d = new Date(e.start.replace(" ", "T"));
+        return d >= now && d <= seven;
+      });
 
+      // 排序：高 → 中 → 低
+      const order = { 高: 1, 中: 2, 低: 3 };
+      filtered.sort(
+        (a, b) => order[a.extendedProps.priority] - order[b.extendedProps.priority]
+      );
 
+      // 清空任務列表
+      taskList.innerHTML = filtered.length
+        ? ""
+        : "<p class='opacity-80 italic'>(未來七天沒有任務 ✨)</p>";
+
+      // 渲染任務
+      filtered.forEach((ev) => {
+        let row = document.createElement("div");
+        row.className = "task-item flex items-center gap-2 py-1 handwriting";
+
+        let checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+
+        checkbox.onclick = () => {
+          fetch(`/personal/toggle/${ev.id}/`, { method: "POST" }).then(() => {
+            calendar.refetchEvents();
+            loadTasks();
+          });
+        };
+
+        // 日期格式化
+        let d = new Date(ev.start.replace(" ", "T"));
+        let mm = String(d.getMonth() + 1).padStart(2, "0");
+        let dd = String(d.getDate()).padStart(2, "0");
+        let weekday = ["日", "一", "二", "三", "四", "五", "六"][d.getDay()];
+
+        let text = document.createElement("span");
+        text.textContent = `${mm}/${dd}（${weekday}）｜${ev.title}`;
+
+        row.appendChild(checkbox);
+        row.appendChild(text);
+        taskList.appendChild(row);
+      });
+    });
+}
+
+  </script>
+  
+    
 {% block extra_js %}
 <script src="{% static 'core/js/calendar.js' %}"></script>
 {% endblock %}
