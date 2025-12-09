@@ -1,6 +1,31 @@
 document.addEventListener("DOMContentLoaded", function () {
 
     // ================================
+    // 日期解析器（最終穩定版）
+    // ================================
+    function parseDateSmart(raw) {
+        // 標準 ISO：2025-12-11T00:00:00
+        if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) {
+            return new Date(raw);
+        }
+
+        // YYYY-MM-DD HH:MM
+        if (/^\d{4}-\d{2}-\d{2} /.test(raw)) {
+            return new Date(raw.replace(" ", "T"));
+        }
+
+        // 若是 MM-DDTxx:xx:xx → 補當年年份
+        if (/^\d{2}-\d{2}T/.test(raw)) {
+            const year = new Date().getFullYear();
+            return new Date(`${year}-${raw}`);
+        }
+
+        // fallback
+        return new Date(raw.replace("T", " "));
+    }
+
+
+    // ================================
     // 取得 HTML 元素
     // ================================
     const calendarEl = document.getElementById("calendar");
@@ -201,7 +226,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         if (currentEvent) {
-            // **更新 FullCalendar 事件物件（不會報錯）**
             currentEvent.setProp("title", eventTitle.value);
             currentEvent.setStart(eventDate.value);
             currentEvent.setEnd(eventDate.value);
@@ -248,7 +272,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // ================================
-    // 七日任務清單
+    // 七日任務清單（整合後最終版）
     // ================================
     function loadTasks() {
         fetch("/personal/events/")
@@ -259,11 +283,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 let filtered = events.filter(e => {
                     if (e.extendedProps.is_completed) return false;
-                    let d = new Date(e.start);
+
+                    let d = parseDateSmart(e.start);
                     return d >= now && d <= seven;
                 });
 
-                // 依優先度排序（高 → 中 → 低）
                 const order = { "高": 1, "中": 2, "低": 3 };
                 filtered.sort((a, b) => order[a.extendedProps.priority] - order[b.extendedProps.priority]);
 
@@ -285,13 +309,14 @@ document.addEventListener("DOMContentLoaded", function () {
                         });
                     };
 
-                    // ✔ 日期格式成品：01/30（四）
-                    let d = new Date(ev.start);
+                    let d = parseDateSmart(ev.start);
                     let mm = String(d.getMonth() + 1).padStart(2, "0");
                     let dd = String(d.getDate()).padStart(2, "0");
-                    let weekday = ["日", "一", "二", "三", "四", "五", "六"][d.getDay()];
-
+                    // 修改：星期前加上 '週'
+                    let weekday = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"][d.getDay()]; 
+                    
                     let text = document.createElement("span");
+                    // 顯示格式：MM/DD（週X）｜事件名稱
                     text.textContent = `${mm}/${dd}（${weekday}）｜${ev.title}`;
 
                     row.appendChild(checkbox);
@@ -303,3 +328,4 @@ document.addEventListener("DOMContentLoaded", function () {
 
     loadTasks();
 });
+

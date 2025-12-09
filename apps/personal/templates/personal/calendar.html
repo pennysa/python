@@ -1,741 +1,679 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Planora ✨ 個人行事曆（粉系）</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planora ✨ 個人行事曆（粉系）</title>
 
-<!-- 🎀 手寫字體（正確位置） -->
-<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Kosugi+Maru&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 
-<!-- FullCalendar -->
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
+    <script src="https://cdn.tailwindcss.com"></script>
 
-<!-- 日期選擇器 -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <style>
+        /* ========================================= */
+        /* 字體 & 動畫 */
+        /* ========================================= */
+        body {
+            font-family: 'Quicksand', 'Noto Sans TC', sans-serif;
+            transition: background 1.5s ease, color 1s ease;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
 
-<!-- Tailwind -->
-<script src="https://cdn.tailwindcss.com"></script>
+        /* ========================================= */
+        /* 背景主題（粉系） */
+        /* ========================================= */
+        body.day {
+            background: linear-gradient(135deg, #fff1f2 0%, #fdf2f8 100%);
+            color: #374151;
+        }
 
-<style>
+        body.night {
+            background: radial-gradient(circle at top left, #2b0a3d 0%, #532066 40%, #8b52a3 75%, #d7a7e8 100%);
+            color: #fdf2f8;
+            background-attachment: fixed;
+        }
 
-  /* 高級手寫風（近期任務用） */
-.handwriting {
-  font-family: 'Klee One', 'Kosugi Maru', 'Noto Sans TC', sans-serif;
-  font-size: 1.05rem;
-  letter-spacing: 0.5px;
-}
+        /* 星空 */
+        .stars {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            z-index: -1;
+            pointer-events: none;
+        }
 
-/* ========================================= */
-/* 字體 & 動畫 */
-/* ========================================= */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            width: 2px;
+            height: 2px;
+            box-shadow: 0 0 6px white;
+            animation: twinkle 2.5s infinite ease-in-out alternate;
+        }
 
-body {
-  font-family: 'Quicksand','Noto Sans TC',sans-serif;
-  transition: background 1.5s ease, color 1s ease;
-  overflow-x: hidden;
-  min-height: 100vh;
-}
+        @keyframes twinkle {
+            0% { opacity: 0.2; transform: scale(0.6); }
+            100% { opacity: 1; transform: scale(1.4); }
+        }
 
-/* ========================================= */
-/* 背景主題（粉系） */
-/* ========================================= */
-body.day {
-  background: linear-gradient(135deg, #fff1f2 0%, #fdf2f8 100%);
-  color: #374151;
-}
-body.night {
-  background: radial-gradient(circle at top left, #2b0a3d 0%, #532066 40%, #8b52a3 75%, #d7a7e8 100%);
-  color: #fdf2f8;
-  background-attachment: fixed;
-}
+        /* ========================================= */
+        /* 導航列 (已修正 Z-Index 與 Sticky) */
+        /* ========================================= */
+        .navbar {
+            backdrop-filter: blur(14px);
+            transition: background 0.8s ease;
+            position: sticky; /* 固定在上方 */
+            top: 0;
+            z-index: 50; /* 確保在最上層 */
+        }
 
-/* 星空 */
-.stars { position: fixed; inset: 0; overflow: hidden; z-index: -1; pointer-events:none; }
-.star {
-  position: absolute; background: white; border-radius:50%;
-  width:2px; height:2px; box-shadow:0 0 6px white;
-  animation: twinkle 2.5s infinite ease-in-out alternate;
-}
-@keyframes twinkle {
-  0% { opacity:0.2; transform:scale(0.6); }
-  100% { opacity:1; transform:scale(1.4); }
-}
+        .navbar-day { background: rgba(255, 255, 255, 0.6); }
+        .navbar-night { background: rgba(70, 40, 100, 0.45); }
 
-/* ========================================= */
-/* 導航列 */
-/* ========================================= */
-.navbar {
-  backdrop-filter: blur(14px);
-  transition: background 0.8s ease;
-}
-.navbar-day { background: rgba(255,255,255,0.6); }
-.navbar-night { background: rgba(70,40,100,0.45); }
+        /* ========================================= */
+        /* FullCalendar 自訂樣式 */
+        /* ========================================= */
+        .fc .fc-toolbar-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4b5563;
+        }
 
-/* ========================================= */
-/* FullCalendar 自訂樣式 */
-/* ========================================= */
+        /* 夜間模式標題修正 */
+        body.night .fc .fc-toolbar-title { color: #fdf2f8; }
+        body.night .fc-theme-standard th { border-color: rgba(255,255,255,0.2); color: #fdf2f8; }
+        body.night .fc-theme-standard td { border-color: rgba(255,255,255,0.1); }
 
-.fc .fc-toolbar-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #4b5563;
-}
+        .fc-button {
+            background: #f9a8d4 !important;
+            border: none !important;
+            color: #4b5563 !important;
+            border-radius: 8px !important;
+            padding: 4px 12px !important;
+        }
 
-.fc-button {
-  background: #f9a8d4 !important;
-  border: none !important;
-  color: #4b5563 !important;
-  border-radius: 8px !important;
-  padding: 4px 12px !important;
-}
-.fc-button:hover {
-  background: #fda4af !important;
-}
+        .fc-button:hover { background: #fda4af !important; }
+        .fc-button.fc-button-active {
+            background: #f472b6 !important;
+            color: white !important;
+        }
 
-.fc-button.fc-button-active {
-  background: #f472b6 !important;
-  color: white !important;
-}
+        .fc-event {
+            border-radius: 10px !important;
+            border: none !important;
+            cursor: pointer;
+        }
 
-.fc-event {
-  border-radius: 10px !important;
-  border: none !important;
-}
+        /* 月曆事件 pill */
+        .fc-event-pink-pill {
+            display: inline-block;
+            max-width: 100%;
+            padding: 2px 6px;
+            border-radius: 8px;
+            color: #1e293b;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-/* ✅ 月曆裡的事件 pill */
-.fc-event-pink-pill {
-  display: inline-block;
-  max-width: 100%;
-  padding: 2px 6px;
-  border-radius: 8px;
-  color: #1e293b;
-  font-size: 0.85rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+        /* ========================================= */
+        /* 卡片玻璃效果 */
+        /* ========================================= */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 1.5rem;
+            padding: 1.2rem;
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(14px);
+        }
 
-/* ========================================= */
-/* 卡片玻璃效果 */
-/* ========================================= */
-.glass-card {
-  background: rgba(255,255,255,0.18);
-  border-radius: 1.5rem;
-  padding: 1.2rem;
-  box-shadow: 0 0 25px rgba(255,255,255,0.35);
-  backdrop-filter: blur(14px);
-}
+        /* ========================================= */
+        /* 浮動按鈕 */
+        /* ========================================= */
+        .float-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+            transition: transform .3s, box-shadow .3s;
+            z-index: 40;
+        }
 
-/* ========================================= */
-/* 浮動按鈕 */
-/* ========================================= */
-.float-btn {
-  position: fixed; bottom:2rem; right:2rem;
-  width:70px; height:70px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-size:2rem; color:white;
-  cursor:pointer; transition:transform .3s, box-shadow .3s;
-}
-body.day .float-btn {
-  background: linear-gradient(135deg,#fda4af,#f9a8d4);
-  box-shadow:0 0 25px rgba(253,164,175,1);
-}
-body.night .float-btn {
-  background: linear-gradient(135deg,#c4b5fd,#f0abfc);
-  box-shadow:0 0 25px rgba(200,180,255,1);
-}
-.float-btn:hover { transform:scale(1.17); }
+        body.day .float-btn {
+            background: linear-gradient(135deg, #fda4af, #f9a8d4);
+            box-shadow: 0 0 25px rgba(253, 164, 175, 1);
+        }
 
-/* ========================================= */
-/* Modal */
-/* ========================================= */
-.modal-bg {
-  display:none; position:fixed; inset:0;
-  background:rgba(0,0,0,0.45);
-  justify-content:center; align-items:center;
-  z-index:50;
-}
-.modal-box {
-  width:360px;
-  background:white; color:#374151;
-  border-radius:1.4rem; padding:1.7rem;
-  box-shadow:0 0 30px rgba(0,0,0,0.2);
-}
-.modal-box input, .modal-box textarea, .modal-box select {
-  width:100%; border:1px solid #d1d5db;
-  border-radius:0.6rem; padding:0.5rem;
-  margin-bottom:0.8rem;
-}
+        body.night .float-btn {
+            background: linear-gradient(135deg, #c4b5fd, #f0abfc);
+            box-shadow: 0 0 25px rgba(200, 180, 255, 1);
+        }
 
-/* 色票 */
-.color-dot {
-  width:28px; height:28px; border-radius:50%;
-  cursor:pointer; transition:transform 0.2s;
-  border: 2px solid transparent;
-}
-.color-dot:hover { transform:scale(1.15); }
-.color-dot.selected { border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.3); }
-.color-pick-wrapper { display:flex; flex-wrap:wrap; gap:0.45rem; margin-bottom:1rem; }
+        .float-btn:hover { transform: scale(1.17); }
 
-/* ========================================= */
-/* 顯示強化：+x more 與夜間日期顏色 */
-/* ========================================= */
+        /* ========================================= */
+        /* Modal */
+        /* ========================================= */
+        .modal-bg {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            justify-content: center;
+            align-items: center;
+            z-index: 60; /* 比 Navbar 高 */
+        }
 
-/* --- "+x more" 樣式 --- */
-.fc-more-link {
-  color: #ec4899 !important; /* 白天：亮粉紅 */
-  font-weight: 600 !important;
-  font-size: 0.95rem !important;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 6px;
-  padding: 1px 5px;
-  transition: all 0.25s ease;
-}
-.fc-more-link:hover {
-  background: rgba(253, 164, 175, 0.7);
-  transform: scale(1.08);
-}
+        .modal-box {
+            width: 360px;
+            background: white;
+            color: #374151;
+            border-radius: 1.4rem;
+            padding: 1.7rem;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+        }
 
-/* 夜間模式下的 "+x more" */
-body.night .fc-more-link {
-  color: #fde68a !important; /* 夜晚：亮金色 */
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  font-weight: 700;
-}
-body.night .fc-more-link:hover {
-  background: rgba(255, 255, 255, 0.35);
-  transform: scale(1.08);
-}
+        .modal-box input,
+        .modal-box textarea,
+        .modal-box select {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 0.6rem;
+            padding: 0.5rem;
+            margin-bottom: 0.8rem;
+        }
 
-/* --- 夜間模式日期顏色 --- */
-body.night .fc-daygrid-day-number {
-  color: #fdf4ff !important;   /* 淺亮粉白 */
-  font-weight: 600;
-}
+        /* 色票 */
+        .color-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 2px solid transparent;
+        }
 
-/* 夜間模式：跨月日期（灰格） */
-body.night .fc-day-other .fc-daygrid-day-number {
-  color: #c4b5fd !important;   /* 淡紫灰 */
-  opacity: 0.85;
-}
+        .color-dot:hover { transform: scale(1.15); }
 
-/* 白天模式：跨月日期（略淡） */
-body.day .fc-day-other .fc-daygrid-day-number {
-  color: #a1a1aa !important;   /* 淡灰 */
-  opacity: 0.7;
-}
+        .color-dot.selected {
+            border: 3px solid white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
 
-/* 夜間模式下的年月標題顏色 */
-body.night .fc-toolbar-title {
-  color: #fdf4ff !important;  /* 淺亮粉白 */
-  text-shadow: 0 0 10px rgba(255, 200, 255, 0.5);
-}
+        .color-pick-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-bottom: 1rem;
+        }
+    </style>
 
-/* 白天模式下保持粉灰色 */
-body.day .fc-toolbar-title {
-  color: #4b5563 !important;
-}
-
-/* 三顆導覽按鈕的間距 */
-.fc-toolbar-chunk .fc-button-group,
-.fc-toolbar-chunk button {
-  margin-right: 6px !important;
-}
-
-/* 月份標題 */
-.fc-toolbar-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #374151;
-  margin: 0 10px !important;
-}
-
-/* 夜間模式年月標題 */
-body.night .fc-toolbar-title {
-  color: #fdf4ff !important;
-}
-
-/* 右側切換按鈕樣式微調 */
-.fc-toolbar-chunk:last-child button {
-  margin-left: 4px !important;
-}
-
-</style>
 </head>
 
 <body class="day">
 
-<!-- 星空 -->
-<div class="stars" id="stars"></div>
+    <div class="stars" id="stars"></div>
 
-<!-- 導航列 -->
-<nav id="navbar" class="navbar navbar-day flex justify-between items-center px-6 py-3">
-  <div class="flex space-x-6 font-semibold text-lg">
-    <a href="/" class="hover:opacity-70">🏠 Home</a>
-    <a href="/shared/" class="hover:opacity-70">📂 Shared</a>
-    <a href="/personal/" class="hover:opacity-70">🪄 Personal</a>
-  </div>
+    <nav id="navbar" class="navbar navbar-day flex justify-between items-center px-6 py-3">
+        <div class="flex space-x-6 font-semibold text-lg">
+            <a href="/" class="hover:opacity-70">🏠 Home</a>
+            <a href="/shared/" class="hover:opacity-70">📂 Shared</a>
+            <a href="/personal/" class="hover:opacity-70">🪄 Personal</a>
+        </div>
+        <button id="themeToggle" class="px-3 py-1 rounded-lg bg-pink-200/70 hover:bg-pink-300 transition">
+            🌙 夜間模式
+        </button>
+    </nav>
 
-  <button id="themeToggle"
-    class="px-3 py-1 rounded-lg bg-pink-200/70 hover:bg-pink-300 transition">
-    🌙 夜間模式
-  </button>
-</nav>
+    <main class="flex flex-col lg:flex-row justify-between px-4 lg:px-16 mt-10 gap-6">
 
-<!-- 主內容 -->
-<main class="flex justify-between px-16 mt-10">
+        <section class="glass-card w-full lg:w-[65%] mb-6 lg:mb-0">
+            <h2 class="text-2xl font-bold mb-4 flex items-center"> 📅 <span class="ml-2">個人行事曆</span> </h2>
+            <div id="calendar"></div>
+        </section>
 
-  <!-- 日曆 -->
-  <section class="glass-card w-[60%]">
-    <h2 class="text-2xl font-bold mb-4 flex items-center">
-      📅 <span class="ml-2">個人行事曆</span>
-    </h2>
-    <div id="calendar"></div>
-  </section>
+        <aside class="glass-card w-full lg:w-[30%] h-fit text-center">
+            <h2 class="text-2xl font-bold mb-3">🎯 近期任務（七日內）</h2>
+            <div id="taskList"></div>
+        </aside>
 
-  <!-- 任務清單 -->
-  <aside class="glass-card w-[30%] text-center">
-    <h2 class="text-2xl font-bold mb-3">🎯 近期任務（七日內）</h2>
-    <div id="taskList"></div>
-  </aside>
-</main>
+    </main>
 
-<!-- 新增事件按鈕 -->
-<button id="addEventBtn" class="float-btn">＋</button>
+    <button id="addEventBtn" class="float-btn">＋</button>
 
-<!-- Modal -->
-<div id="modal-bg" class="modal-bg">
-  <div class="modal-box">
-    <h2 id="modal-title" class="text-xl font-bold mb-3">📝 新增事件</h2>
+    <div id="modal-bg" class="modal-bg">
+        <div class="modal-box">
+            <h2 id="modal-title" class="text-xl font-bold mb-3">📝 新增事件</h2>
 
-    <!-- 事件名稱 -->
-    <input type="text" id="eventTitle" placeholder="事件名稱">
+            <input type="text" id="eventTitle" placeholder="事件名稱">
+            <input type="text" id="eventDate" placeholder="選擇日期">
 
-    <!-- 日期（由點日曆決定） -->
-    <input type="text" id="eventDate" placeholder="選擇日期">
+            <label class="text-sm font-semibold mt-2">開始時間</label>
+            <input type="text" id="eventStartTime" placeholder="09:00">
 
-    <!-- 開始時間 -->
-    <label class="text-sm font-semibold mt-2">開始時間</label>
-    <input type="text" id="eventStartTime" placeholder="09:00">
+            <label class="text-sm font-semibold mt-2">結束時間</label>
+            <input type="text" id="eventEndTime" placeholder="10:00">
 
-    <!-- 結束時間 -->
-    <label class="text-sm font-semibold mt-2">結束時間</label>
-    <input type="text" id="eventEndTime" placeholder="10:00">
-    
-    <div class="color-pick-wrapper" id="colorOptions">
-      <div class="color-dot" data-color="#fda4af" style="background:#fda4af"></div>
-      <div class="color-dot" data-color="#fbb6ce" style="background:#fbb6ce"></div>
-      <div class="color-dot" data-color="#f9a8d4" style="background:#f9a8d4"></div>
-      <div class="color-dot" data-color="#c4b5fd" style="background:#c4b5fd"></div>
-      <div class="color-dot" data-color="#93c5fd" style="background:#93c5fd"></div>
-      <div class="color-dot" data-color="#7dd3fc" style="background:#7dd3fc"></div>
-      <div class="color-dot" data-color="#bbf7d0" style="background:#bbf7d0"></div>
-      <div class="color-dot" data-color="#fde68a" style="background:#fde68a"></div>
+            <div class="color-pick-wrapper" id="colorOptions">
+                <div class="color-dot" data-color="#fda4af" style="background:#fda4af"></div>
+                <div class="color-dot" data-color="#fbb6ce" style="background:#fbb6ce"></div>
+                <div class="color-dot" data-color="#f9a8d4" style="background:#f9a8d4"></div>
+                <div class="color-dot" data-color="#c4b5fd" style="background:#c4b5fd"></div>
+                <div class="color-dot" data-color="#93c5fd" style="background:#93c5fd"></div>
+                <div class="color-dot" data-color="#7dd3fc" style="background:#7dd3fc"></div>
+                <div class="color-dot" data-color="#bbf7d0" style="background:#bbf7d0"></div>
+                <div class="color-dot" data-color="#fde68a" style="background:#fde68a"></div>
+            </div>
+
+            <textarea id="eventNote" rows="2" placeholder="備註"></textarea>
+
+            <select id="eventPriority" class="mb-3 w-full border rounded-lg p-2">
+                <option value="低">低優先</option>
+                <option value="中" selected>一般</option>
+                <option value="高">高優先</option>
+            </select>
+
+            <div class="flex justify-end space-x-2">
+                <button id="deleteBtn" class="bg-red-400 text-white px-3 py-1 rounded hidden">刪除</button>
+                <button id="cancelBtn" class="bg-gray-300 px-3 py-1 rounded">取消</button>
+                <button id="saveBtn" class="bg-blue-400 text-white px-3 py-1 rounded">儲存</button>
+            </div>
+
+        </div>
     </div>
 
-    <textarea id="eventNote" rows="2" placeholder="備註"></textarea>
-
-    <select id="eventPriority" class="mb-3 w-full border rounded-lg p-2">
-      <option value="低">低優先</option>
-      <option value="中" selected>一般</option>
-      <option value="高">高優先</option>
-    </select>
-
-    <div class="flex justify-end space-x-2">
-      <button id="deleteBtn" class="bg-red-400 text-white px-3 py-1 rounded hidden">刪除</button>
-      <button id="cancelBtn" class="bg-gray-300 px-3 py-1 rounded">取消</button>
-      <button id="saveBtn" class="bg-blue-400 text-white px-3 py-1 rounded">儲存</button>
-    </div>
-
-  </div>
-</div>
-
-<script>
-  /* ========================================= */
-  /* 星空 */
-  /* ========================================= */
-  function createStars() {
-    const sky = document.getElementById("stars");
-    for (let i = 0; i < 90; i++) {
-      const s = document.createElement("div");
-      s.classList.add("star");
-      s.style.top = Math.random() * 100 + "vh";
-      s.style.left = Math.random() * 100 + "vw";
-      s.style.animationDelay = Math.random() * 2 + "s";
-      sky.appendChild(s);
-    }
-  }
-  createStars();
-  
-  /* ========================================= */
-  /* 日夜模式 */
-  /* ========================================= */
-  const themeBtn = document.getElementById("themeToggle");
-  const navbar = document.getElementById("navbar");
-  
-  themeBtn.onclick = () => {
-    document.body.classList.toggle("night");
-    document.body.classList.toggle("day");
-  
-    const isNight = document.body.classList.contains("night");
-    themeBtn.textContent = isNight ? "☀️ 日間模式" : "🌙 夜間模式";
-  
-    navbar.className = isNight
-      ? "navbar navbar-night flex justify-between items-center px-6 py-3"
-      : "navbar navbar-day flex justify-between items-center px-6 py-3";
-  };
-  
-  /* ========================================= */
-  /* FullCalendar */
-  /* ========================================= */
-  document.addEventListener("DOMContentLoaded", function () {
-  
-    /* DOM */
-    const calendarEl = document.getElementById("calendar");
-    const taskList = document.getElementById("taskList");
-    const modalBg = document.getElementById("modal-bg");
-    const modalTitle = document.getElementById("modal-title");
-  
-    const eventTitle = document.getElementById("eventTitle");
-    const eventDate = document.getElementById("eventDate");
-    const eventNote = document.getElementById("eventNote");
-    const eventPriority = document.getElementById("eventPriority");
-  
-    /* 新時間欄位（只有時間） */
-    const eventStartTime = document.getElementById("eventStartTime");
-    const eventEndTime = document.getElementById("eventEndTime");
-  
-    const deleteBtn = document.getElementById("deleteBtn");
-    const saveBtn = document.getElementById("saveBtn");
-    const cancelBtn = document.getElementById("cancelBtn");
-    const addEventBtn = document.getElementById("addEventBtn");
-  
-    let selectedColor = "#fda4af";
-    let currentEvent = null;
-  
-    /* 色票 */
-    document.querySelectorAll(".color-dot").forEach((dot) => {
-      dot.onclick = () => {
-        selectedColor = dot.dataset.color;
-        document.querySelectorAll(".color-dot").forEach((d) =>
-          d.classList.remove("selected")
-        );
-        dot.classList.add("selected");
-      };
-    });
-  
-    /* flatpickr 初始化（只有時間） */
-    flatpickr("#eventStartTime", {
-      enableTime: true,
-      noCalendar: true,
-      dateFormat: "H:i",
-    });
-  
-    flatpickr("#eventEndTime", {
-      enableTime: true,
-      noCalendar: true,
-      dateFormat: "H:i",
-    });
-  
-    /* ========================================= */
-    /* FullCalendar 實例化 */
-    /* ========================================= */
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: "dayGridMonth",
-      locale: "zh-tw",
-      editable: true,
-      selectable: true,
-      displayEventTime: true,
-      dayMaxEvents: true,
-  
-      headerToolbar: {
-        left: "prev today next",
-        center: "title",
-        right: "dayGridMonth,timeGridWeek,timeGridDay",
-      },
-  
-      events: "{% url 'personal:get_events' %}",
-  
-      eventContent(arg) {
-        const pill = document.createElement("div");
-        pill.classList.add("fc-event-pink-pill");
-        pill.style.backgroundColor =
-          arg.event.backgroundColor || arg.event.borderColor;
-        pill.textContent = arg.event.title;
-  
-        if (arg.event.extendedProps.is_completed) {
-          pill.style.opacity = "0.6";
-          pill.style.textDecoration = "line-through";
+    <script>
+        /* ========================================= */
+        /* 工具：取得 CSRF Token */
+        /* ========================================= */
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
         }
-        return { domNodes: [pill] };
-      },
-  
-      /* ========================================= */
-      /* 點擊事件 → 編輯 */
-      /* ========================================= */
-      eventClick(info) {
-        currentEvent = info.event;
-  
-        modalTitle.textContent = "✏️ 編輯事件";
-  
-        eventTitle.value = info.event.title;
-        eventDate.value = info.event.start.toISOString().slice(0, 10);
-        eventStartTime.value = info.event.start.toISOString().slice(11, 16);
-  
-        if (info.event.end) {
-          eventEndTime.value = info.event.end.toISOString().slice(11, 16);
-        } else {
-          eventEndTime.value = "";
+        const csrftoken = getCookie('csrftoken');
+
+        /* ========================================= */
+        /* 工具：Fetch Wrapper (自動帶入 CSRF) */
+        /* ========================================= */
+        async function sendRequest(url, method, body = null) {
+            const options = {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrftoken // 關鍵修正
+                }
+            };
+            if (body) options.body = JSON.stringify(body);
+
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response;
+            } catch (error) {
+                console.error('Fetch error:', error);
+                alert("操作失敗，請檢查網路或稍後再試。");
+                throw error;
+            }
         }
-  
-        eventNote.value = info.event.extendedProps.note || "";
-        eventPriority.value = info.event.extendedProps.priority || "中";
-        selectedColor = info.event.extendedProps.true_color;
-  
-        document.querySelectorAll(".color-dot").forEach((d) =>
-          d.classList.toggle("selected", d.dataset.color === selectedColor)
-        );
-  
-        deleteBtn.classList.remove("hidden");
-        modalBg.style.display = "flex";
-      },
-  
-      /* ========================================= */
-      /* 點擊日期 → 新增事件 */
-      /* ========================================= */
-      dateClick(info) {
-        currentEvent = null;
-  
-        modalTitle.textContent = "📝 新增事件";
-  
-        eventTitle.value = "";
-        eventDate.value = info.dateStr;
-        eventStartTime.value = "";
-        eventEndTime.value = "";
-        eventNote.value = "";
-        eventPriority.value = "中";
-  
-        selectedColor = "#fda4af";
-        document.querySelectorAll(".color-dot").forEach((d) =>
-          d.classList.toggle("selected", d.dataset.color === selectedColor)
-        );
-  
-        deleteBtn.classList.add("hidden");
-        modalBg.style.display = "flex";
-      },
-  
-      /* ========================================= */
-      /* （4）拖曳或調整大小 → 自動同步事件與 modal */
-      /* ========================================= */
-      eventDrop(info) {
-        syncEventAfterMove(info.event);
-      },
-      eventResize(info) {
-        syncEventAfterMove(info.event);
-      },
-    });
-  
-    calendar.render();
-  
-    /* ========================================= */
-    /* （4）更新後同步事件物件資料 */
-    /* ========================================= */
-    function syncEventAfterMove(ev) {
-      const newStart = ev.start.toISOString();   // 2025-12-10T12:00:00Z
-      const newEnd   = ev.end ? ev.end.toISOString() : null;  // 2025-12-10T13:00:00Z
 
-  
-      fetch(`/personal/update/${ev.id}/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: ev.title,
-          start: newStart,
-          end: newEnd,
-          note: ev.extendedProps.note,
-          color: ev.extendedProps.true_color,
-          priority: ev.extendedProps.priority,
-        }),
-      }).then(() => {
-        calendar.refetchEvents();
-        loadTasks();
-      });
-    }
-  
-    /* ========================================= */
-    /* 新增事件 API */
-    /* ========================================= */
-    function addEventAPI() {
-      fetch("{% url 'personal:add_event' %}", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: eventTitle.value,
-          start: `${eventDate.value} ${eventStartTime.value}`,
-          end: eventEndTime.value
-            ? `${eventDate.value} ${eventEndTime.value}:00`
-            : null,
-          note: eventNote.value,
-          color: selectedColor,
-          priority: eventPriority.value,
-        }),
-      }).then(() => {
-        calendar.refetchEvents();
-        loadTasks();
-        modalBg.style.display = "none";
-      });
-    }
-  
-    /* ========================================= */
-    /* 更新事件 API */
-    /* ========================================= */
-    function updateEvent(ev) {
-      fetch(`/personal/update/${ev.id}/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: eventTitle.value,
-          start: `${eventDate.value} ${eventStartTime.value}`,
-          end: eventEndTime.value
-            ? `${eventDate.value} ${eventEndTime.value}:00`
-            : null,
-          note: eventNote.value,
-          color: selectedColor,
-          priority: eventPriority.value,
-        }),
-      }).then(() => {
-        calendar.refetchEvents();
-        loadTasks();
-      });
-    }
-  
-    /* ========================================= */
-    /* 刪除 API */
-    /* ========================================= */
-    deleteBtn.onclick = () => {
-      fetch(`/personal/delete/${currentEvent.id}/`, { method: "POST" }).then(
-        () => {
-          calendar.refetchEvents();
-          loadTasks();
-          modalBg.style.display = "none";
+        /* 星空動畫 */
+        function createStars() {
+            const sky = document.getElementById("stars");
+            for (let i = 0; i < 90; i++) {
+                const s = document.createElement("div");
+                s.classList.add("star");
+                s.style.top = Math.random() * 100 + "vh";
+                s.style.left = Math.random() * 100 + "vw";
+                s.style.animationDelay = Math.random() * 2 + "s";
+                sky.appendChild(s);
+            }
         }
-      );
-    };
-  
-    /* ========================================= */
-    /* Modal 控制 */
-    /* ========================================= */
-    saveBtn.onclick = () => {
-      if (!eventTitle.value || !eventDate.value || !eventStartTime.value) {
-        alert("請輸入完整資訊");
-        return;
-      }
-  
-      if (currentEvent) {
-        updateEvent(currentEvent);
-        modalBg.style.display = "none";
-      } else {
-        addEventAPI();
-      }
-    };
-  
-    cancelBtn.onclick = () => (modalBg.style.display = "none");
-    modalBg.onclick = (e) => {
-      if (e.target === modalBg) modalBg.style.display = "none";
-    };
-  
-    addEventBtn.onclick = () => {
-      currentEvent = null;
-  
-      modalTitle.textContent = "📝 新增事件";
-      eventTitle.value = "";
-      eventDate.value = "";
-      eventStartTime.value = "";
-      eventEndTime.value = "";
-      eventNote.value = "";
-      eventPriority.value = "中";
-  
-      selectedColor = "#fda4af";
-      document.querySelectorAll(".color-dot").forEach((d) =>
-        d.classList.toggle("selected", d.dataset.color === selectedColor)
-      );
-  
-      deleteBtn.classList.add("hidden");
-      modalBg.style.display = "flex";
-    };
-  
-    /* ========================================= */
-    /* 七日任務清單 */
-    /* ========================================= */
-    function loadTasks() {
-  fetch("{% url 'personal:get_events' %}")
-    .then((res) => res.json())
-    .then((events) => {
-      const now = new Date();
-      const seven = new Date(now.getTime() + 7 * 86400 * 1000);
+        createStars();
 
-      // 篩選：未完成 + 七天內
-      let filtered = events.filter((e) => {
-        if (e.extendedProps.is_completed) return false;
-
-        // 修正日期格式
-        let d = new Date(e.start.replace(" ", "T"));
-        return d >= now && d <= seven;
-      });
-
-      // 排序：高 → 中 → 低
-      const order = { 高: 1, 中: 2, 低: 3 };
-      filtered.sort(
-        (a, b) => order[a.extendedProps.priority] - order[b.extendedProps.priority]
-      );
-
-      // 清空任務列表
-      taskList.innerHTML = filtered.length
-        ? ""
-        : "<p class='opacity-80 italic'>(未來七天沒有任務 ✨)</p>";
-
-      // 渲染任務
-      filtered.forEach((ev) => {
-        let row = document.createElement("div");
-        row.className = "task-item flex items-center gap-2 py-1 handwriting";
-
-        let checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-
-        checkbox.onclick = () => {
-          fetch(`/personal/toggle/${ev.id}/`, { method: "POST" }).then(() => {
-            calendar.refetchEvents();
-            loadTasks();
-          });
+        /* 日夜主題切換 */
+        const themeBtn = document.getElementById("themeToggle");
+        const navbar = document.getElementById("navbar");
+        themeBtn.onclick = () => {
+            document.body.classList.toggle("night");
+            document.body.classList.toggle("day");
+            const isNight = document.body.classList.contains("night");
+            themeBtn.textContent = isNight ? "☀️ 日間模式" : "🌙 夜間模式";
+            navbar.className = isNight
+                ? "navbar navbar-night flex justify-between items-center px-6 py-3"
+                : "navbar navbar-day flex justify-between items-center px-6 py-3";
         };
 
-        // 日期格式化
-        let d = new Date(ev.start.replace(" ", "T"));
-        let mm = String(d.getMonth() + 1).padStart(2, "0");
-        let dd = String(d.getDate()).padStart(2, "0");
-        let weekday = ["日", "一", "二", "三", "四", "五", "六"][d.getDay()];
+        /* FullCalendar 初始化 */
+        document.addEventListener("DOMContentLoaded", function () {
 
-        let text = document.createElement("span");
-        text.textContent = `${mm}/${dd}（${weekday}）｜${ev.title}`;
+            const calendarEl = document.getElementById("calendar");
+            const taskList = document.getElementById("taskList");
+            const modalBg = document.getElementById("modal-bg");
+            const modalTitle = document.getElementById("modal-title");
 
-        row.appendChild(checkbox);
-        row.appendChild(text);
-        taskList.appendChild(row);
-      });
-    });
-}
+            const eventTitle = document.getElementById("eventTitle");
+            const eventDate = document.getElementById("eventDate");
+            const eventNote = document.getElementById("eventNote");
+            const eventPriority = document.getElementById("eventPriority");
 
-  </script>
-  
-    
-{% block extra_js %}
-<script src="{% static 'core/js/calendar.js' %}"></script>
-{% endblock %}
+            const eventStartTime = document.getElementById("eventStartTime");
+            const eventEndTime = document.getElementById("eventEndTime");
+
+            const deleteBtn = document.getElementById("deleteBtn");
+            const saveBtn = document.getElementById("saveBtn");
+            const cancelBtn = document.getElementById("cancelBtn");
+            const addEventBtn = document.getElementById("addEventBtn");
+
+            let selectedColor = "#fda4af";
+            let currentEvent = null;
+
+            /* 色票點選 */
+            document.querySelectorAll(".color-dot").forEach((dot) => {
+                dot.onclick = () => {
+                    selectedColor = dot.dataset.color;
+                    document.querySelectorAll(".color-dot").forEach((d) =>
+                        d.classList.remove("selected")
+                    );
+                    dot.classList.add("selected");
+                };
+            });
+
+            /* 時間欄位初始化 */
+            flatpickr("#eventStartTime", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
+            flatpickr("#eventEndTime", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
+
+            /* FullCalendar 例項 */
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: "dayGridMonth",
+                locale: "zh-tw",
+                editable: true,
+                selectable: true,
+                displayEventTime: true,
+                dayMaxEvents: true,
+                headerToolbar: {
+                    left: "prev today next",
+                    center: "title",
+                    right: "dayGridMonth,timeGridWeek,timeGridDay",
+                },
+
+                events: "{% url 'personal:get_events' %}",
+
+                eventContent(arg) {
+                    const pill = document.createElement("div");
+                    pill.classList.add("fc-event-pink-pill");
+                    pill.style.backgroundColor = arg.event.backgroundColor || arg.event.borderColor;
+                    pill.textContent = arg.event.title;
+                    if (arg.event.extendedProps.is_completed) {
+                        pill.style.opacity = "0.6";
+                        pill.style.textDecoration = "line-through";
+                    }
+                    return { domNodes: [pill] };
+                },
+
+                /* 點擊事件 → 編輯 */
+                eventClick(info) {
+                    currentEvent = info.event;
+
+                    modalTitle.textContent = "✏️ 編輯事件";
+                    eventTitle.value = info.event.title;
+
+                    // 使用本地時間字串切割，避免時區跑掉
+                    const startObj = info.event.start;
+                    const endObj = info.event.end;
+
+                    const toLocalInput = (date) => {
+                         if (!date) return "";
+                         // 這裡偷懶用本地時間偏移修正，讓 toISOString 吐出本地時間
+                         const offset = date.getTimezoneOffset() * 60000;
+                         return (new Date(date - offset)).toISOString();
+                    }
+
+                    const localStart = toLocalInput(startObj);
+                    
+                    eventDate.value = localStart.slice(0, 10);
+                    eventStartTime.value = localStart.slice(11, 16);
+                    
+                    if (endObj) {
+                        const localEnd = toLocalInput(endObj);
+                        eventEndTime.value = localEnd.slice(11, 16);
+                    } else {
+                        eventEndTime.value = "";
+                    }
+
+                    eventNote.value = info.event.extendedProps.note || "";
+                    eventPriority.value = info.event.extendedProps.priority || "中";
+
+                    selectedColor = info.event.extendedProps.true_color;
+                    document.querySelectorAll(".color-dot").forEach((d) =>
+                        d.classList.toggle("selected", d.dataset.color === selectedColor)
+                    );
+
+                    deleteBtn.classList.remove("hidden");
+                    modalBg.style.display = "flex";
+                },
+
+                /* 點擊日期 → 新增事件 */
+                dateClick(info) {
+                    currentEvent = null;
+
+                    modalTitle.textContent = "📝 新增事件";
+                    eventTitle.value = "";
+                    eventDate.value = info.dateStr;
+                    eventStartTime.value = "";
+                    eventEndTime.value = "";
+                    eventNote.value = "";
+                    eventPriority.value = "中";
+
+                    selectedColor = "#fda4af";
+                    document.querySelectorAll(".color-dot").forEach((d) =>
+                        d.classList.toggle("selected", d.dataset.color === selectedColor)
+                    );
+
+                    deleteBtn.classList.add("hidden");
+                    modalBg.style.display = "flex";
+                },
+
+                /* 拖曳 / 調整大小 */
+                eventDrop(info) { syncEventAfterMove(info.event); },
+                eventResize(info) { syncEventAfterMove(info.event); },
+
+            }); // end calendar init
+
+            calendar.render();
+
+            /* ========================================= */
+            /* 邏輯：拖曳後同步事件 */
+            /* ========================================= */
+            function syncEventAfterMove(ev) {
+                // 使用本地時間格式化
+                const formatLocal = (date) => {
+                    if (!date) return null;
+                    const offset = date.getTimezoneOffset() * 60000;
+                    const localISO = (new Date(date - offset)).toISOString();
+                    return localISO.slice(0, 16).replace("T", " "); // YYYY-MM-DD HH:MM
+                };
+
+                const newStart = formatLocal(ev.start);
+                const newEnd = formatLocal(ev.end);
+
+                sendRequest(`/personal/update/${ev.id}/`, "POST", {
+                    title: ev.title,
+                    start: newStart,
+                    end: newEnd,
+                    note: ev.extendedProps.note,
+                    color: ev.extendedProps.true_color,
+                    priority: ev.extendedProps.priority,
+                }).then(() => {
+                    // 不需要 refetch，FullCalendar 已經在前端動了，只要後端跟上就好
+                    // 但為了保險起見或更新任務列表：
+                    loadTasks(); 
+                });
+            }
+
+            /* ========================================= */
+            /* 邏輯：新增 / 更新 / 刪除 */
+            /* ========================================= */
+            
+            // 處理表單提交
+            saveBtn.onclick = () => {
+                if (!eventTitle.value || !eventDate.value || !eventStartTime.value) {
+                    alert("請輸入完整資訊（標題、日期、開始時間）！");
+                    return;
+                }
+
+                const payload = {
+                    title: eventTitle.value,
+                    start: `${eventDate.value} ${eventStartTime.value}`,
+                    end: eventEndTime.value ? `${eventDate.value} ${eventEndTime.value}` : null,
+                    note: eventNote.value,
+                    color: selectedColor,
+                    priority: eventPriority.value,
+                };
+
+                if (currentEvent) {
+                    // Update
+                    sendRequest(`/personal/update/${currentEvent.id}/`, "POST", payload).then(() => {
+                        calendar.refetchEvents();
+                        loadTasks();
+                        modalBg.style.display = "none";
+                    });
+                } else {
+                    // Add
+                    sendRequest("{% url 'personal:add_event' %}", "POST", payload).then(() => {
+                        calendar.refetchEvents();
+                        loadTasks();
+                        modalBg.style.display = "none";
+                    });
+                }
+            };
+
+            // 刪除
+            deleteBtn.onclick = () => {
+                if(!confirm("確定要刪除這個事件嗎？")) return;
+                
+                sendRequest(`/personal/delete/${currentEvent.id}/`, "POST").then(() => {
+                    calendar.refetchEvents();
+                    loadTasks();
+                    modalBg.style.display = "none";
+                });
+            };
+
+            cancelBtn.onclick = () => (modalBg.style.display = "none");
+            modalBg.onclick = (e) => { if (e.target === modalBg) modalBg.style.display = "none"; };
+
+            addEventBtn.onclick = () => {
+                currentEvent = null;
+                modalTitle.textContent = "📝 新增事件";
+                eventTitle.value = "";
+                // 預設日期為今天
+                const today = new Date();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                eventDate.value = `${today.getFullYear()}-${mm}-${dd}`;
+                
+                eventStartTime.value = "";
+                eventEndTime.value = "";
+                eventNote.value = "";
+                eventPriority.value = "中";
+                selectedColor = "#fda4af";
+                document.querySelectorAll(".color-dot").forEach((d) =>
+                    d.classList.toggle("selected", d.dataset.color === selectedColor)
+                );
+                deleteBtn.classList.add("hidden");
+                modalBg.style.display = "flex";
+            };
+
+            /* ========================================= */
+            /* 七日任務清單 (Load Tasks) */
+            /* ========================================= */
+            function loadTasks() {
+                fetch("{% url 'personal:get_events' %}")
+                    .then((res) => res.json())
+                    .then((events) => {
+                        const now = new Date();
+                        const seven = new Date(now.getTime() + 7 * 86400 * 1000);
+
+                        let filtered = events.filter((e) => {
+                            if (e.extendedProps.is_completed) return false;
+                            // 修正日期解析：處理 ISO 格式
+                            let d = new Date(e.start);
+                            return d >= now && d <= seven;
+                        });
+
+                        const order = { 高: 1, 中: 2, 低: 3 };
+                        filtered.sort(
+                            (a, b) => order[a.extendedProps.priority] - order[b.extendedProps.priority]
+                        );
+
+                        taskList.innerHTML = filtered.length
+                            ? ""
+                            : "<p class='opacity-80 italic mt-4'>(未來七天沒有任務 ✨)</p>";
+
+                        filtered.forEach((ev) => {
+                            let row = document.createElement("div");
+                            row.className = "task-item flex items-center gap-2 py-2 border-b border-gray-100/30 last:border-0";
+
+                            let checkbox = document.createElement("input");
+                            checkbox.type = "checkbox";
+                            checkbox.className = "cursor-pointer w-4 h-4 text-pink-500 rounded focus:ring-pink-500";
+                            checkbox.onclick = () => {
+                                sendRequest(`/personal/toggle/${ev.id}/`, "POST").then(() => {
+                                    calendar.refetchEvents();
+                                    loadTasks();
+                                });
+                            };
+
+                            // 日期處理
+                            let startDate = new Date(ev.start);
+                            let mm = String(startDate.getMonth() + 1).padStart(2, "0");
+                            let dd = String(startDate.getDate()).padStart(2, "0");
+                            let dateString = `${mm}/${dd}`;
+
+                            let days = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
+                            let weekday = days[startDate.getDay()];
+
+                            let text = document.createElement("span");
+                            text.className = "text-sm text-left truncate w-full";
+                            text.textContent = `${dateString}（${weekday}）｜${ev.title}`;
+
+                            row.appendChild(checkbox);
+                            row.appendChild(text);
+                            taskList.appendChild(row);
+                        });
+                    });
+            }
+
+            loadTasks();
+
+        }); // end DOMContentLoaded
+    </script>
 </body>
 </html>
+
