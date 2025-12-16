@@ -1,32 +1,7 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
 
     // ================================
-    // 日期解析器（最終穩定版）
-    // ================================
-    function parseDateSmart(raw) {
-        // 標準 ISO：2025-12-11T00:00:00
-        if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) {
-            return new Date(raw);
-        }
-
-        // YYYY-MM-DD HH:MM
-        if (/^\d{4}-\d{2}-\d{2} /.test(raw)) {
-            return new Date(raw.replace(" ", "T"));
-        }
-
-        // 若是 MM-DDTxx:xx:xx → 補當年年份
-        if (/^\d{2}-\d{2}T/.test(raw)) {
-            const year = new Date().getFullYear();
-            return new Date(`${year}-${raw}`);
-        }
-
-        // fallback
-        return new Date(raw.replace("T", " "));
-    }
-
-
-    // ================================
-    // 取得 HTML 元素
+    // DOM Elements
     // ================================
     const calendarEl = document.getElementById("calendar");
     const taskList = document.getElementById("taskList");
@@ -49,22 +24,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // ================================
-    // 色票選擇
+    // Color Picker
     // ================================
     document.querySelectorAll(".color-dot").forEach(dot => {
-        dot.onclick = () => {
+        dot.addEventListener("click", () => {
             selectedColor = dot.dataset.color;
-
-            document.querySelectorAll(".color-dot")
-                .forEach(d => d.classList.remove("selected"));
-
+            document.querySelectorAll(".color-dot").forEach(d => d.classList.remove("selected"));
             dot.classList.add("selected");
-        };
+        });
     });
 
 
     // ================================
-    // FullCalendar 初始化
+    // FullCalendar
     // ================================
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: "dayGridMonth",
@@ -72,7 +44,6 @@ document.addEventListener("DOMContentLoaded", function () {
         editable: true,
         selectable: true,
         dayMaxEvents: true,
-        dayMaxEventRows: true,
 
         headerToolbar: {
             left: "prev today next",
@@ -82,12 +53,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         events: "/personal/events/",
 
-
-        // === 粉色小 pill ===
         eventContent(arg) {
-            let pill = document.createElement("div");
-            pill.classList.add("fc-event-pink-pill");
-
+            const pill = document.createElement("div");
+            pill.className = "fc-event-pink-pill";
             pill.style.backgroundColor = arg.event.backgroundColor;
             pill.textContent = arg.event.title;
 
@@ -99,52 +67,49 @@ document.addEventListener("DOMContentLoaded", function () {
             return { domNodes: [pill] };
         },
 
-
-        // === 點事件 → 編輯 ===
         eventClick(info) {
             currentEvent = info.event;
 
             modalTitle.textContent = "✏️ 編輯事件";
+            eventTitle.value = currentEvent.title;
+            eventDate.value = currentEvent.start.toISOString().slice(0, 10);
+            eventNote.value = currentEvent.extendedProps.note;
+            eventPriority.value = currentEvent.extendedProps.priority;
 
-            eventTitle.value = info.event.title;
-            eventDate.value = info.event.startStr.slice(0, 10);
-            eventNote.value = info.event.extendedProps.note;
-            eventPriority.value = info.event.extendedProps.priority;
-
-            selectedColor = info.event.extendedProps.true_color;
-
-            document.querySelectorAll(".color-dot").forEach(d => {
-                d.classList.toggle("selected", d.dataset.color === selectedColor);
-            });
+            selectedColor = currentEvent.extendedProps.true_color;
+            document.querySelectorAll(".color-dot").forEach(d =>
+                d.classList.toggle("selected", d.dataset.color === selectedColor)
+            );
 
             deleteBtn.classList.remove("hidden");
             modalBg.style.display = "flex";
         },
 
-
-        // === 點日期 → 新增 ===
         dateClick(info) {
             currentEvent = null;
 
             modalTitle.textContent = "📝 新增事件";
-
             eventTitle.value = "";
             eventDate.value = info.dateStr;
             eventNote.value = "";
             eventPriority.value = "中";
-
             selectedColor = "#fda4af";
 
-            document.querySelectorAll(".color-dot").forEach(d => {
-                d.classList.toggle("selected", d.dataset.color === selectedColor);
-            });
+            document.querySelectorAll(".color-dot").forEach(d =>
+                d.classList.toggle("selected", d.dataset.color === selectedColor)
+            );
 
             deleteBtn.classList.add("hidden");
             modalBg.style.display = "flex";
         },
 
-        eventDrop(info) { saveUpdatedEvent(info.event); },
-        eventResize(info) { saveUpdatedEvent(info.event); },
+        eventDrop(info) {
+            saveUpdatedEvent(info.event);
+        },
+
+        eventResize(info) {
+            saveUpdatedEvent(info.event);
+        },
     });
 
     calendar.render();
@@ -153,20 +118,28 @@ document.addEventListener("DOMContentLoaded", function () {
     // ================================
     // Date Picker
     // ================================
-    flatpickr("#eventDate", { dateFormat: "Y-m-d" });
+    flatpickr("#eventDate", {
+        dateFormat: "Y-m-d",
+    });
 
 
     // ================================
-    // 新增事件 API
+    // API helpers
     // ================================
+    function formatDateTime(d) {
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")} ` +
+               `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    }
+
+
     function addEventAPI() {
         fetch("/personal/add/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 title: eventTitle.value,
-                start: eventDate.value,
-                end: eventDate.value,
+                start: `${eventDate.value} 09:00`,
+                end: `${eventDate.value} 10:00`,
                 note: eventNote.value,
                 color: selectedColor,
                 priority: eventPriority.value,
@@ -179,17 +152,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // ================================
-    // 更新事件 API（拖曳或儲存時）
-    // ================================
     function saveUpdatedEvent(ev) {
         fetch(`/personal/update/${ev.id}/`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 title: ev.title,
-                start: ev.startStr.slice(0, 10),
-                end: ev.endStr ? ev.endStr.slice(0, 10) : ev.startStr.slice(0, 10),
+                start: formatDateTime(ev.start),
+                end: formatDateTime(ev.end || ev.start),
                 note: ev.extendedProps.note,
                 color: ev.extendedProps.true_color,
                 priority: ev.extendedProps.priority,
@@ -201,12 +171,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // ================================
-    // 刪除事件
-    // ================================
     deleteBtn.onclick = () => {
         if (!currentEvent) return;
-
         fetch(`/personal/delete/${currentEvent.id}/`, { method: "POST" })
             .then(() => {
                 calendar.refetchEvents();
@@ -216,9 +182,6 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
 
-    // ================================
-    // 儲存按鈕（新增 or 更新）
-    // ================================
     saveBtn.onclick = () => {
         if (!eventTitle.value || !eventDate.value) {
             alert("請輸入完整資訊");
@@ -227,12 +190,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (currentEvent) {
             currentEvent.setProp("title", eventTitle.value);
-            currentEvent.setStart(eventDate.value);
-            currentEvent.setEnd(eventDate.value);
-
             currentEvent.setExtendedProp("note", eventNote.value);
             currentEvent.setExtendedProp("priority", eventPriority.value);
             currentEvent.setExtendedProp("true_color", selectedColor);
+            currentEvent.setStart(`${eventDate.value}T09:00`);
+            currentEvent.setEnd(`${eventDate.value}T10:00`);
 
             saveUpdatedEvent(currentEvent);
             modalBg.style.display = "none";
@@ -242,19 +204,12 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
 
-    // ================================
-    // Modal 關閉
-    // ================================
     cancelBtn.onclick = () => modalBg.style.display = "none";
     modalBg.onclick = e => { if (e.target === modalBg) modalBg.style.display = "none"; };
 
 
-    // ================================
-    // 新增事件按鈕
-    // ================================
     addEventBtn.onclick = () => {
         currentEvent = null;
-
         modalTitle.textContent = "📝 新增事件";
         eventTitle.value = "";
         eventDate.value = "";
@@ -262,9 +217,9 @@ document.addEventListener("DOMContentLoaded", function () {
         eventPriority.value = "中";
         selectedColor = "#fda4af";
 
-        document.querySelectorAll(".color-dot").forEach(d => {
-            d.classList.toggle("selected", d.dataset.color === selectedColor);
-        });
+        document.querySelectorAll(".color-dot").forEach(d =>
+            d.classList.toggle("selected", d.dataset.color === selectedColor)
+        );
 
         deleteBtn.classList.add("hidden");
         modalBg.style.display = "flex";
@@ -272,7 +227,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // ================================
-    // 七日任務清單（整合後最終版）
+    // 7-day task list
     // ================================
     function loadTasks() {
         fetch("/personal/events/")
@@ -281,42 +236,41 @@ document.addEventListener("DOMContentLoaded", function () {
                 const now = new Date();
                 const seven = new Date(now.getTime() + 7 * 86400 * 1000);
 
-                let filtered = events.filter(e => {
+                const filtered = events.filter(e => {
                     if (e.extendedProps.is_completed) return false;
-
-                    let d = parseDateSmart(e.start);
+                    const d = new Date(e.start);
                     return d >= now && d <= seven;
                 });
 
                 const order = { "高": 1, "中": 2, "低": 3 };
-                filtered.sort((a, b) => order[a.extendedProps.priority] - order[b.extendedProps.priority]);
+                filtered.sort((a, b) =>
+                    order[a.extendedProps.priority] - order[b.extendedProps.priority]
+                );
 
                 taskList.innerHTML = filtered.length
                     ? ""
-                    : "<p class='opacity-80 italic'>(未來七天沒有任務 ✨)</p>";
+                    : "<p class='opacity-70 italic'>(未來七天沒有任務)</p>";
 
                 filtered.forEach(ev => {
-                    let row = document.createElement("div");
-                    row.className = "task-item flex items-center gap-2 py-1 handwriting";
+                    const d = new Date(ev.start);
+                    const mm = String(d.getMonth()+1).padStart(2,"0");
+                    const dd = String(d.getDate()).padStart(2,"0");
+                    const weekday = ["週日","週一","週二","週三","週四","週五","週六"][d.getDay()];
 
-                    let checkbox = document.createElement("input");
+                    const row = document.createElement("div");
+                    row.className = "task-item flex items-center gap-2 py-1";
+
+                    const checkbox = document.createElement("input");
                     checkbox.type = "checkbox";
-
                     checkbox.onclick = () => {
-                        fetch(`/personal/toggle/${ev.id}/`, { method: "POST" }).then(() => {
-                            calendar.refetchEvents();
-                            loadTasks();
-                        });
+                        fetch(`/personal/toggle/${ev.id}/`, { method: "POST" })
+                            .then(() => {
+                                calendar.refetchEvents();
+                                loadTasks();
+                            });
                     };
 
-                    let d = parseDateSmart(ev.start);
-                    let mm = String(d.getMonth() + 1).padStart(2, "0");
-                    let dd = String(d.getDate()).padStart(2, "0");
-                    // 修改：星期前加上 '週'
-                    let weekday = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"][d.getDay()]; 
-                    
-                    let text = document.createElement("span");
-                    // 顯示格式：MM/DD（週X）｜事件名稱
+                    const text = document.createElement("span");
                     text.textContent = `${mm}/${dd}（${weekday}）｜${ev.title}`;
 
                     row.appendChild(checkbox);
@@ -328,4 +282,5 @@ document.addEventListener("DOMContentLoaded", function () {
 
     loadTasks();
 });
+
 

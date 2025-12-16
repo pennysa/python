@@ -1,0 +1,131 @@
+/* ==========================================================
+   🌲 TREEDOC 專用 CSS — 森林系日夜背景 + 玻璃 UI
+   ========================================================== */
+
+/* 避免 BASE 干擾 */
+body.treedoc-page {
+    min-height: 100vh;
+    transition: background 1.2s ease, color 0.6s ease;
+    font-family: 'Fredoka','Noto Sans TC',sans-serif;
+}
+
+/* ==========================================================
+   🌄 日間模式（森林晨光）
+   ========================================================== */
+body.treedoc-day {
+    background: linear-gradient(to bottom,
+        #f3f8ef 0%,
+        #e7f4dd 25%,
+        #dcefd0 55%,
+        #cbe3bd 100%
+    );
+    background-attachment: fixed;
+    color: #2a3b2a;
+}
+
+/* ==========================================================
+   🌌 夜間模式（深林霧藍 + 月光）
+   ========================================================== */
+body.treedoc-night {
+    background: radial-gradient(circle at 30% 20%,
+        rgba(200, 230, 255, 0.18) 0%,
+        rgba(20, 40, 35, 0.55) 40%,
+        rgba(10, 18, 14, 1) 100%
+    );
+    background-attachment: fixed;
+    color: #e8f5e9;
+}
+
+/* ==========================================================
+   🌿 玻璃卡片
+   ========================================================== */
+.treedoc-card {
+    padding: 18px 20px;
+    border-radius: 14px;
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    transition: 0.3s ease;
+}
+
+body.treedoc-day .treedoc-card {
+    background: rgba(255, 255, 255, 0.55);
+    box-shadow: 0 4px 18px rgba(150, 180, 150, 0.25);
+}
+
+body.treedoc-night .treedoc-card {
+    background: rgba(40, 55, 45, 0.45);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+}
+
+/* ==========================================================
+   🌲 標題
+   ========================================================== */
+.treedoc-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+}
+
+body.treedoc-day .treedoc-title {
+    color: #325c32;
+}
+
+body.treedoc-night .treedoc-title {
+    color: #cfe8cf;
+    text-shadow: 0 0 12px rgba(180,255,200,0.5);
+}
+
+/* ==========================================================
+   🌱 Treedoc 按鈕
+   ========================================================== */
+.treedoc-btn {
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: 0.25s ease;
+}
+
+body.treedoc-day .treedoc-btn {
+    background: #8fcf81;
+    color: white;
+}
+
+body.treedoc-night .treedoc-btn {
+    background: #4e6f50;
+    color: #e8ffe8;
+}
+
+/* ==========================================================
+   📄 清單項目
+   ========================================================== */
+.treedoc-item {
+    padding: 12px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.25s ease;
+}
+
+body.treedoc-day .treedoc-item {
+    background: rgba(255,255,255,0.7);
+}
+
+body.treedoc-night .treedoc-item {
+    background: rgba(50,60,55,0.45);
+}
+
+/* ==========================================================
+   📁 上傳版本框
+   ========================================================== */
+.treedoc-upload-box {
+    padding: 22px;
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+}
+
+body.treedoc-day .treedoc-upload-box {
+    background: rgba(255,255,255,0.65);
+}
+
+body.treedoc-night .treedoc-upload-box {
+    background: rgba(40,50,45,0.55);
+}

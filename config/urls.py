@@ -4,13 +4,23 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('', include('apps.core.urls')),        # ✅ 登入 / 登出 / 首頁
-    path('personal/', include('apps.personal.urls')),  # ✅ 個人行事曆
-    path('admin/', admin.site.urls),
-    path('accounts/', include('allauth.urls')),        # ✅ 加這行！啟用 Google / GitHub / Email 登入
-    path('accounts/', include('apps.accounts.urls')),  # ✅ 登入登出由 accounts 處理
+    # 🏠 Core / Home
+    path('', include(('apps.core.urls', 'core'), namespace='core')),
 
+    # 📅 Personal Calendar
+    path('personal/', include(('apps.personal.urls', 'personal'), namespace='personal')),
+
+    # 🔐 Accounts（Email / Google 登入）
+    path('accounts/', include('allauth.urls')),
+    path('accounts/', include(('apps.accounts.urls', 'accounts'), namespace='accounts')),
+
+    # 🌳 Treedoc — must include namespace !!!
+    path('treedoc/', include(('apps.treedoc.urls', 'treedoc'), namespace='treedoc')),
+
+    # ⚙ Django Admin
+    path('admin/', admin.site.urls),
 ]
 
+# 📂 Media file serving
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,34 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'treedoc/treedoc.css' %}">
+
+<body class="treedoc-page">
+
+<a href="{% url 'treedoc:folder_list' %}"
+   class="text-blue-500 hover:underline">← 回到資料夾列表</a>
+
+<h1 class="treedoc-title">🌲 {{ folder.name }}</h1>
+
+<form method="POST" class="mb-6 flex gap-2">
+  {% csrf_token %}
+  <input type="text" name="title" placeholder="新增文件…" 
+         class="p-2 border rounded w-60">
+  <button class="px-4 py-2 bg-green-500 text-white rounded">新增</button>
+</form>
+
+<h2 class="text-xl font-bold mb-3">📄 文件</h2>
+
+{% for d in documents %}
+<a href="{% url 'treedoc:document_detail' d.id %}"
+   class="treedoc-card mb-3 block hover:scale-[1.02]">
+   📄 {{ d.title }}
+</a>
+{% endfor %}
+
+</body>
+{% endblock %}
+
+
+

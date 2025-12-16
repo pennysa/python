@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.personal",
     "apps.accounts",
-
+    "apps.treedoc",
     # Allauth
     "allauth",
     "allauth.account",
@@ -195,20 +195,40 @@ MESSAGE_TAGS = {
 }
 
 
-# ==========================================
-# ASGI 應用設定（支援 WebSocket）
-# ==========================================
-#ASGI_APPLICATION = 'config.asgi.application'
+# ============================================================
+# Redis（部署 / 本機 共用）
+# ============================================================
 
-# ==========================================
-# Channel Layer 設定 - 使用 Redis
-# ==========================================
-# 直接使用 REDIS_URI，這樣密碼、host、port 都會自動帶入
-#CHANNEL_LAYERS = {
-#    'default': {
-#        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-#        'CONFIG': {
-#            'hosts': [REDIS_URI],  # 使用與 Cache 相同的連線設定
-#        },
-#    },
-#}
+REDIS_URL = os.getenv(
+    "REDIS_URL",
+    "redis://127.0.0.1:6379/0"   # 本機 fallback
+)
+
+# ============================================================
+# Django Cache（django-redis）
+# ============================================================
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+        "KEY_PREFIX": "planora",
+    }
+}
+
+# ============================================================
+# Celery（使用 Redis 當 broker / result backend）
+# ============================================================
+
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+

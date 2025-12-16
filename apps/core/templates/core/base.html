@@ -13,179 +13,182 @@
   <style>
     body {
       font-family: 'Fredoka','Noto Sans TC',sans-serif;
-      color: #1e293b;
       overflow-x: hidden;
-      transition: background 1.5s ease, color 1s ease;
+      transition: background 1.4s ease, color 0.8s ease;
     }
+
+    /* ===== 導行列基礎樣式 ===== */
+    #navbar {
+      backdrop-filter: blur(10px);
+      transition: background 1s ease, color 0.8s ease;
+    }
+
+    /* ☀️ 白天 */
     #navbar.navbar-day {
       background: rgba(255, 255, 255, 0.75);
       color: #1e293b;
       box-shadow: 0 4px 20px rgba(255, 192, 203, 0.3);
-      backdrop-filter: blur(10px);
-      transition: background 1s ease, color 0.8s ease;
     }
+
+    /* 🌙 夜間 */
     #navbar.navbar-night {
       background: rgba(40, 20, 60, 0.6);
       color: #f8fafc;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(10px);
-      transition: background 1s ease, color 0.8s ease;
     }
+
     #navbar a { transition: color 0.4s ease; }
     body.home-day #navbar a:hover { color: #f472b6; }
     body.home-night #navbar a:hover { color: #ffcc88; }
-    footer { transition: color 0.5s ease; }
 
-    /* 💫 使用者名字柔光效果 */
+    /* User Name Glow */
     .username-glow {
-      color: #f9c97a;
-      text-shadow: 0 0 6px rgba(255, 210, 120, 0.8), 0 0 12px rgba(255, 200, 90, 0.4);
-      transition: text-shadow 0.5s ease, color 0.5s ease;
-    }
-    body.home-day .username-glow {
-      color: #e97da1;
-      text-shadow: 0 0 8px rgba(255, 180, 200, 0.5);
+      text-shadow: 0 0 6px rgba(255, 210, 120, 0.8);
+      transition: color 0.5s ease, text-shadow 0.5s ease;
     }
 
-    /* 🌸 登入／登出鍵：白天 / 夜間自動換色 */
-    .auth-btn {
-      transition: all 0.4s ease;
-    }
+    body.home-day .username-glow { color: #e97da1; }
+    body.home-night .username-glow { color: #f9c97a; }
 
-    /* ☀️ 白天樣式 */
-    body.home-day .login-btn {
+    /* Auth Buttons */
+    .auth-btn { transition: all 0.4s ease; }
+
+    /* 白天 */
+    body.home-day .login-btn,
+    body.personal-day .login-btn,
+    body.treedoc-day .login-btn {
       background: linear-gradient(to right, #a855f7cc, #ec4899cc);
-      box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
-    }
-    body.home-day .logout-btn {
-      background: linear-gradient(to right, #ec4899cc, #a855f7cc);
-      box-shadow: 0 0 10px rgba(236, 72, 153, 0.3);
     }
 
-    /* 🌙 夜間樣式 */
-    body.home-night .login-btn {
+    /* 夜間 */
+    body.home-night .login-btn,
+    body.personal-night .login-btn,
+    body.treedoc-night .login-btn {
       background: linear-gradient(to right, #db2777cc, #7c3aedcc);
-      box-shadow: 0 0 12px rgba(219, 39, 119, 0.35);
-    }
-    body.home-night .logout-btn {
-      background: linear-gradient(to right, #7c3aedcc, #db2777cc);
-      box-shadow: 0 0 12px rgba(124, 58, 237, 0.35);
     }
 
-    /* hover 動畫 */
-    .auth-btn:hover {
-      opacity: 0.9;
-      transform: scale(1.05);
+    body.home-day .logout-btn,
+    body.personal-day .logout-btn,
+    body.treedoc-day .logout-btn {
+      background: linear-gradient(to right, #ec4899cc, #a855f7cc);
     }
+
+    body.home-night .logout-btn,
+    body.personal-night .logout-btn,
+    body.treedoc-night .logout-btn {
+      background: linear-gradient(to right, #7c3aedcc, #db2777cc);
+    }
+
+    .auth-btn:hover { opacity: 0.9; transform: scale(1.05); }
   </style>
 </head>
 
-<body class="min-h-screen flex flex-col transition-colors duration-700">
-  <!-- 🔹 導航列 -->
+<body class="min-h-screen flex flex-col transition-colors duration-700 {% block page_class %}{% endblock %}">
+
+  <!-- ===== 導航列 ===== -->
   <nav id="navbar" class="navbar-day flex justify-between items-center px-8 py-4 sticky top-0 z-50">
+
     <div class="flex items-center space-x-6 font-semibold text-lg">
-      <a href="{% url 'core:home' %}" class="hover:text-pink-500 transition">🏠 Home</a>
-      <a href="{% url 'personal:personal_calendar' %}" class="hover:text-blue-500 transition">🪄 Personal</a>
+      <a href="{% url 'core:home' %}">🏠 Home</a>
+      <a href="{% url 'personal:personal_calendar' %}">🪄 Personal</a>
+      <a href="{% url 'treedoc:folder_list' %}">🌳 Treedoc</a>
     </div>
 
-    <!-- 🔐 登入／登出 -->
-    {% if user.is_authenticated %}
-      <div class="flex items-center space-x-3">
-        <span class="font-medium username-glow">
-          👋 {{ user.username }}
-        </span>
-        <a href="{% url 'accounts:logout' %}" 
-           class="logout-btn auth-btn px-3 py-1 rounded-lg text-white font-semibold shadow-md transition">
-            登出
+    <div class="flex items-center space-x-4">
+
+      <!-- 🌗 全站日夜切換按鈕 -->
+      <button id="globalThemeToggle"
+              class="px-3 py-1 rounded-lg border text-sm font-semibold">
+        🌙 夜間模式
+      </button>
+
+      {% if user.is_authenticated %}
+        <span class="font-medium username-glow">👋 {{ user.username }}</span>
+        <a href="{% url 'accounts:logout' %}"
+           class="logout-btn auth-btn px-3 py-1 rounded-lg text-white shadow-md">
+           登出
         </a>
-      </div>
-    {% else %}
-      <a href="{% url 'accounts:login' %}"
-         class="login-btn auth-btn px-3 py-1 rounded-lg text-white font-semibold shadow-md transition">
-         🔐 登入
-      </a>
-    {% endif %}
+      {% else %}
+        <a href="{% url 'accounts:login' %}"
+           class="login-btn auth-btn px-3 py-1 rounded-lg text-white shadow-md">
+           🔐 登入
+        </a>
+      {% endif %}
+    </div>
+
   </nav>
 
-  <!-- ✨ 提示訊息（登入／登出等） -->
-  {% if messages %}
-    <div class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 space-y-2">
-      {% for message in messages %}
-        <div class="px-6 py-3 rounded-xl shadow-lg text-white text-center backdrop-blur-lg bg-opacity-70
-                    {% if message.tags == 'success' %}
-                      bg-gradient-to-r from-purple-500/90 to-pink-400/90
-                    {% elif message.tags == 'error' %}
-                      bg-gradient-to-r from-red-500/90 to-pink-500/90
-                    {% elif message.tags == 'warning' %}
-                      bg-gradient-to-r from-yellow-400/90 to-orange-400/90
-                    {% else %}
-                      bg-gray-700/80
-                    {% endif %}
-                    transition duration-500 animate-fade-in-out">
-          {% if message.tags == 'success' %}
-            ✨ {{ message }}
-          {% elif message.tags == 'error' %}
-            ❌ {{ message }}
-          {% elif message.tags == 'warning' %}
-            ⚠️ {{ message }}
-          {% else %}
-            💬 {{ message }}
-          {% endif %}
-        </div>
-      {% endfor %}
-    </div>
-
-    <style>
-      /* ✨ Planora 提示動畫 */
-      @keyframes fadeInOut {
-        0% { opacity: 0; transform: translateY(-10px); }
-        10% { opacity: 1; transform: translateY(0); }
-        90% { opacity: 1; transform: translateY(0); }
-        100% { opacity: 0; transform: translateY(-10px); }
-      }
-      .animate-fade-in-out {
-        animation: fadeInOut 4s ease-in-out forwards;
-      }
-    </style>
-  {% endif %}
-
-  <!-- 🔸 主內容 -->
+  <!-- ===== 主內容 ===== -->
   <main class="flex-1 px-6 md:px-12 py-10">
     {% block content %}{% endblock %}
   </main>
 
-  <!-- 🔹 頁尾 -->
+  <!-- ===== 頁尾 ===== -->
   <footer class="text-center py-6 text-sm opacity-70">
     © 2025 Planora — Dream, Plan, Create ✨
   </footer>
 
-  <!-- ✨ 導航列自動切換 -->
+  <!-- ===== 全站日夜切換控制 ===== -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      const body = document.body;
       const navbar = document.getElementById("navbar");
-      const observer = new MutationObserver(() => {
-        if (document.body.classList.contains("home-night")) {
-          navbar.classList.remove("navbar-day");
-          navbar.classList.add("navbar-night");
-        } else {
-          navbar.classList.remove("navbar-night");
-          navbar.classList.add("navbar-day");
-        }
+      const btn = document.getElementById("globalThemeToggle");
+    
+      // 1️⃣ 判斷目前所在頁面
+      let page = "home"; // 預設 homepage
+    
+      // URL 判斷（比 class 判斷更穩定）
+      if (window.location.pathname.includes("/personal")) page = "personal";
+      if (window.location.pathname.includes("/treedoc")) page = "treedoc";
+    
+      // 若頁面沒有 class，自動加上（homepage 會補 home-page）
+      body.classList.add(`${page}-page`);
+    
+      // 2️⃣ 用 page 當 key，例如 home-mode、personal-mode、treedoc-mode
+      const modeKey = `${page}-mode`;
+    
+      // 3️⃣ 讀取本地設定（預設日間）
+      let saved = localStorage.getItem(modeKey) || "day";
+    
+      // 套用 day / night class
+      body.classList.add(`${page}-${saved}`);
+    
+      function updateNavbar() {
+        const isNight = body.classList.contains(`${page}-night`);
+        navbar.classList.toggle("navbar-night", isNight);
+        navbar.classList.toggle("navbar-day", !isNight);
+        btn.textContent = isNight ? "☀️ 日間模式" : "🌙 夜間模式";
+    
+        // 通知子頁面（homepage 用來產生星星）
+        document.dispatchEvent(new Event("theme-changed"));
+      }
+      updateNavbar();
+    
+      // 4️⃣ 切換模式
+      btn.addEventListener("click", () => {
+        const isNight = body.classList.contains(`${page}-night`);
+    
+        // 移除目前模式
+        body.classList.remove(`${page}-day`, `${page}-night`);
+        // 新模式
+        const newMode = isNight ? "day" : "night";
+        body.classList.add(`${page}-${newMode}`);
+    
+        // 存入 localStorage
+        localStorage.setItem(modeKey, newMode);
+    
+        updateNavbar();
       });
-      observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
     });
-  </script>
+    </script>
+    
 
-
-
-<!-- 全站共用 JS（先載 utils） -->
-<script src="{% static 'core/js/utils.js' %}"></script>
-
-<!-- 各頁面的 JS -->
 {% block extra_js %}{% endblock %}
-
 </body>
 </html>
+
+
 
 
 

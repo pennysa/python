@@ -1,0 +1,34 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'treedoc/treedoc.css' %}">
+
+<body class="treedoc-page">
+
+<a href="{% url 'treedoc:folder_detail' doc.folder.id %}"
+   class="text-blue-500 hover:underline">← 返回資料夾</a>
+
+<h1 class="treedoc-title">📄 {{ doc.title }}</h1>
+
+<a href="{% url 'treedoc:upload_page' doc.id %}"
+   class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 inline-block mb-4">
+  ➕ 新版本
+</a>
+
+<div id="versionTree" class="treedoc-card h-96">
+  <!-- JS 注入版本樹 -->
+</div>
+
+<script src="{% static 'treedoc/version_graph.js' %}"></script>
+<script>
+loadVersionTree({{ doc.id }});
+</script>
+
+</body>
+{% endblock %}
+
+
+
+
+

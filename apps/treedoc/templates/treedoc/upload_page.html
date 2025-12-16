@@ -1,0 +1,36 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}上傳版本{% endblock %}
+{% block page_class %}treedoc-page{% endblock %}
+
+{% block content %}
+
+<div class="treedoc-card max-w-xl mx-auto">
+
+  <h1 class="text-2xl font-bold mb-4">📄 新增版本：{{ doc.title }}</h1>
+
+  <form action="{% url 'treedoc:upload_version' doc.id %}"
+        method="POST"
+        enctype="multipart/form-data">   <!-- ⭐ 必須加 -->
+    {% csrf_token %}
+
+    <label class="block font-semibold mb-1">分支名稱</label>
+    <input type="text" name="branch_name" class="w-full border rounded p-2 mb-4">
+
+    <label class="block font-semibold mb-1">版本描述</label>
+    <textarea name="message" class="w-full border rounded p-2 mb-4"></textarea>
+
+    <label class="block font-semibold mb-1">上傳檔案</label>
+    <input type="file" name="file" class="w-full mb-6">
+
+    <button class="btn-tree">📤 上傳版本</button>
+  </form>
+
+  <a href="{% url 'treedoc:document_detail' doc.id %}" class="btn-tree mt-4 inline-block">
+    ⬅ 返回文件
+  </a>
+
+</div>
+
+{% endblock %}

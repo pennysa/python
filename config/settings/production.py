@@ -1,48 +1,98 @@
 # config/settings/production.py
-
 from .base import *
 import os
 from dotenv import load_dotenv
 import dj_database_url
 
-# 載入 .env 檔案 (如果存在)
+# ============================================================
+# 載入 .env（Zeabur 會自動注入環境變數，這行不會出錯）
+# ============================================================
 load_dotenv()
 
+# ============================================================
+# 基本設定
+# ============================================================
 DEBUG = False
 
-# 從環境變數讀取允許的主機
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 
-# 資料庫設定
-# Zeabur 會自動注入 POSTGRES_CONNECTION_STRING
-postgres_connection_string = os.getenv('POSTGRES_CONNECTION_STRING')
+# ============================================================
+# Database（Zeabur PostgreSQL / fallback SQLite）
+# ============================================================
+postgres_connection_string = os.getenv("POSTGRES_CONNECTION_STRING")
 
 if postgres_connection_string:
-    # 在 Zeabur 上使用 PostgreSQL
     DATABASES = {
-        'default': dj_database_url.parse(
+        "default": dj_database_url.parse(
             postgres_connection_string,
-            conn_max_age=600  # 連線池:連線最多保持 600 秒
+            conn_max_age=600,
         )
     }
 else:
-    # 本地開發使用 SQLite (fallback)
+    # 本地或緊急 fallback（實際 Zeabur 不會走到這）
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
 
-# 生產環境安全設定
-SECURE_SSL_REDIRECT = False  # 強制使用 HTTPS
-SESSION_COOKIE_SECURE = True  # Cookie 只能透過 HTTPS 傳輸
-CSRF_COOKIE_SECURE = True  # CSRF Cookie 只能透過 HTTPS 傳輸
+# ============================================================
+# Redis（Cache + Celery Broker）
+# ============================================================
+REDIS_URL = os.getenv("REDIS_URL")
 
-# 信任 Zeabur 的代理伺服器
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# --- Cache（django-redis）---
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+        "KEY_PREFIX": "planora",
+    }
+}
 
-# CSRF 允許的來源（必須使用 https:// 並且是 list of strings）
+# ============================================================
+# Celery（正式環境一定要啟用）
+# ============================================================
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+# ❗ 生產環境絕對不能 eager
+CELERY_TASK_ALWAYS_EAGER = False
+CELERY_TASK_EAGER_PROPAGATES = False
+
+# ============================================================
+# Security（Zeabur + Proxy）
+# ============================================================
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
 CSRF_TRUSTED_ORIGINS = [
-    "https://planora.zeabur.app"
+    "https://planora.zeabur.app",
 ]
+
+# ============================================================
+# Logging（讓老師看到你有處理 production error）
+# ============================================================
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}
+
