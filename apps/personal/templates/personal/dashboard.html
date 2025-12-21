@@ -19,12 +19,15 @@
     }
 
     body.night {
-      background: linear-gradient(to bottom,#0f172a, /* slate-900 */#111827    /* gray-900 */);
+      background: linear-gradient(
+        to bottom,
+        #1e293b,   /* slate-800 */
+        #0f172a    /* slate-900 */
+      );
       color: #e5e7eb;
-    } 
+    }
 
-
-    /* ===== 星空 ===== */
+    /* ===== 星空（淡化版） ===== */
     .stars {
       position: fixed;
       inset: 0;
@@ -33,14 +36,13 @@
       transition: opacity 1s ease;
       z-index: 0;
       background-image:
-        radial-gradient(1px 1px at 10% 20%, white, transparent),
-        radial-gradient(1px 1px at 30% 80%, white, transparent),
-        radial-gradient(1px 1px at 70% 40%, white, transparent),
-        radial-gradient(1px 1px at 90% 60%, white, transparent);
+        radial-gradient(1px 1px at 15% 20%, rgba(255,255,255,.6), transparent),
+        radial-gradient(1px 1px at 35% 70%, rgba(255,255,255,.4), transparent),
+        radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,.5), transparent);
     }
 
     body.night .stars {
-      opacity: 0.6;
+      opacity: 0.35;
     }
 
     /* ===== Navbar ===== */
@@ -57,27 +59,26 @@
     }
 
     body.night .navbar {
-      background: rgba(2, 6, 23, 0.85);
+      background: rgba(15, 23, 42, 0.85);
       backdrop-filter: blur(8px);
     }
 
     /* ===== 卡片 ===== */
     .card {
       border-radius: 1rem;
-      padding: 1.5rem;
+      padding: 1.75rem;
       transition: background 0.6s ease, color 0.6s ease;
     }
 
     body.day .card {
       background: white;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.06);
     }
 
     body.night .card {
-      background: rgba(30, 41, 59, 0.85); /* slate-800 */
+      background: rgba(30, 41, 59, 0.9); /* slate-800 */
       box-shadow: 0 10px 25px rgba(0,0,0,0.35);
     }
-
   </style>
 </head>
 
@@ -104,13 +105,21 @@
   <!-- ===== 主內容 ===== -->
   <main class="relative z-10 max-w-5xl mx-auto px-6 py-10">
 
-    <h1 class="text-2xl font-bold mb-8 flex items-center gap-2">
+    <!-- 標題 -->
+    <h1 class="text-2xl font-bold mb-2 flex items-center gap-2">
       📊 個人任務 Dashboard
     </h1>
+    <p class="text-sm opacity-70 mb-8">
+      快速掌握你最近一年的任務完成狀況
+    </p>
 
+    <!-- 圖表卡片 -->
     <div class="card">
-      <p class="text-sm opacity-70 mb-4">
-        每月完成任務數量（近期）
+      <p class="text-sm font-medium mb-1">
+        最近 12 個月完成任務數量
+      </p>
+      <p class="text-xs opacity-60 mb-4">
+        顯示最近一年內每月完成的任務數量
       </p>
 
       <canvas id="monthlyEventChart" height="140"></canvas>
@@ -137,7 +146,6 @@
       updateChartColor(next);
     });
 
-    // 初始主題
     const saved = localStorage.getItem("theme") || "day";
     setTheme(saved);
 
@@ -161,11 +169,17 @@
         options: {
           plugins: { legend: { display: false } },
           scales: {
-            x: { grid: { display: false } },
+            x: {
+              grid: { display: false },
+              ticks: { color: "rgba(148,163,184,0.9)" }
+            },
             y: {
               beginAtZero: true,
-              ticks: { stepSize: 1 },
-              grid: { color: "rgba(148,163,184,0.3)" }
+              ticks: {
+                stepSize: 1,
+                color: "rgba(148,163,184,0.9)"
+              },
+              grid: { color: "rgba(148,163,184,0.25)" }
             }
           }
         }
@@ -175,20 +189,18 @@
     function updateChartColor(mode) {
       if (!chart) return;
       chart.data.datasets[0].backgroundColor =
-      mode === "night"
-      ? "rgba(165,180,252,0.85)"  // indigo-300
-      : "rgba(99,102,241,0.65)"
+        mode === "night"
+          ? "rgba(165,180,252,0.85)"  // indigo-300
+          : "rgba(99,102,241,0.65)";  // indigo-500
       chart.update();
     }
 
-    // 先建立空圖
     createChart(
       saved === "night"
-        ? "rgba(129,140,248,0.8)"
+        ? "rgba(165,180,252,0.85)"
         : "rgba(99,102,241,0.65)"
     );
 
-    // 拉資料
     fetch("/personal/api/stats/monthly-completed-events/")
       .then(res => res.json())
       .then(result => {
@@ -200,5 +212,6 @@
 
 </body>
 </html>
+
 
 
