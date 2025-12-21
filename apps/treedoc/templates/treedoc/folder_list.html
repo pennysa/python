@@ -2,55 +2,128 @@
 {% load static %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'treedoc/treedoc.css' %}">
+<div class="max-w-6xl mx-auto px-6 py-10">
 
-<body class="treedoc-page">
+  <!-- ========================= -->
+  <!-- Header -->
+  <!-- ========================= -->
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-green-800 flex items-center gap-3">
+      📁 我的資料夾
+    </h1>
 
-<h1 class="treedoc-title">📁 我的資料夾</h1>
+    <!-- 新增資料夾按鈕 -->
+    <button id="toggle-create-folder"
+      class="px-5 py-2 rounded-xl bg-green-600 text-white font-semibold
+             shadow hover:bg-green-700 transition">
+      ➕ 新增資料夾
+    </button>
+  </div>
 
-<div class="flex justify-end mb-4">
-  <button onclick="openFolderModal()"
-          class="px-4 py-2 rounded-lg font-semibold bg-green-500 text-white hover:bg-green-600">
-    ➕ 新資料夾
-  </button>
-</div>
+  <!-- ========================= -->
+  <!-- 新增資料夾表單（預設隱藏） -->
+  <!-- ========================= -->
+  <div id="create-folder-panel"
+       class="hidden mb-10 bg-green-50 border border-green-200
+              rounded-2xl p-6 shadow-sm">
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-  {% for f in folders %}
-  <a href="{% url 'treedoc:folder_detail' f.id %}"
-     class="treedoc-card hover:scale-[1.02] transition cursor-pointer">
-     🌲 <span class="font-semibold">{{ f.name }}</span>
-  </a>
-  {% endfor %}
-</div>
-
-<!-- Modal -->
-<div id="folderModal" class="hidden fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center">
-  <div class="treedoc-card w-80 p-6">
-    <h2 class="text-xl font-bold mb-3">新增資料夾</h2>
-
-    <form method="POST">
+    <form method="POST" action="{% url 'treedoc:create_folder' %}"
+          class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
       {% csrf_token %}
-      <input type="text" name="folder_name"
-        class="w-full p-2 rounded border mb-4"
-        placeholder="輸入資料夾名稱…">
 
-      <button class="px-4 py-2 bg-green-500 text-white rounded w-full">
+      <div class="flex-1">
+        <label class="block text-sm text-green-800 mb-1">
+          📁 資料夾名稱
+        </label>
+        <input type="text" name="name" required
+               placeholder="例如：統計作業 / 專題 / 讀書筆記"
+               class="w-full px-4 py-2 rounded-xl border
+                      focus:ring-2 focus:ring-green-400 outline-none">
+      </div>
+
+      <button
+        class="mt-2 sm:mt-6 px-6 py-2 rounded-xl
+               bg-green-600 text-white font-semibold
+               hover:bg-green-700 transition">
         建立
       </button>
     </form>
 
-    <button onclick="closeFolderModal()" class="mt-3 text-red-500 w-full">取消</button>
+    <p class="text-sm text-green-700 mt-3">
+      💡 資料夾只是分類容器，裡面可以放多個文件
+    </p>
   </div>
+
+  <!-- ========================= -->
+  <!-- 資料夾列表 -->
+  <!-- ========================= -->
+  {% if folders %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      {% for folder in folders %}
+        <a href="{% url 'treedoc:folder_detail' folder.id %}"
+           class="group rounded-2xl p-6
+                  bg-white border border-green-100
+                  shadow hover:shadow-lg
+                  hover:-translate-y-1 transition">
+
+          <div class="flex items-center gap-4">
+            <div class="text-4xl">📁</div>
+
+            <div class="flex-1">
+              <div class="text-lg font-bold text-gray-800
+                          group-hover:text-green-700 transition">
+                {{ folder.name }}
+              </div>
+
+              <div class="text-sm text-gray-500 mt-1">
+                🌿 {{ folder.documents.count }} 個文件
+              </div>
+            </div>
+          </div>
+
+        </a>
+      {% endfor %}
+
+    </div>
+  {% else %}
+    <!-- ========================= -->
+    <!-- 空狀態 -->
+    <!-- ========================= -->
+    <div class="bg-green-50 border border-green-200
+                rounded-2xl p-12 text-center shadow-sm">
+
+      <div class="text-6xl mb-4">🌱</div>
+
+      <h2 class="text-xl font-bold text-green-800 mb-2">
+        尚未建立任何資料夾
+      </h2>
+
+      <p class="text-green-700 mb-6">
+        資料夾用來整理你的文件與版本，就像 GitHub 的 repository。
+      </p>
+
+      <button onclick="document.getElementById('toggle-create-folder').click()"
+        class="px-6 py-2 rounded-xl
+               bg-green-600 text-white font-semibold
+               hover:bg-green-700 transition">
+        ➕ 建立第一個資料夾
+      </button>
+    </div>
+  {% endif %}
 </div>
 
+<!-- ========================= -->
+<!-- JS：控制新增資料夾顯示 -->
+<!-- ========================= -->
 <script>
-function openFolderModal(){ document.getElementById('folderModal').classList.remove('hidden'); }
-function closeFolderModal(){ document.getElementById('folderModal').classList.add('hidden'); }
+  const toggleBtn = document.getElementById("toggle-create-folder");
+  const panel = document.getElementById("create-folder-panel");
+
+  toggleBtn.addEventListener("click", () => {
+    panel.classList.toggle("hidden");
+  });
 </script>
 
-</body>
 {% endblock %}
-
-
 

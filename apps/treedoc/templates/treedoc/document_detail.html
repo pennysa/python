@@ -2,33 +2,92 @@
 {% load static %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'treedoc/treedoc.css' %}">
+<div class="max-w-3xl mx-auto px-6 py-10">
 
-<body class="treedoc-page">
+  <!-- 返回 -->
+  <a href="{% url 'treedoc:folder_detail' doc.folder.id %}"
+     class="text-blue-500 hover:underline text-sm mb-4 inline-block">
+    ← 返回資料夾
+  </a>
 
-<a href="{% url 'treedoc:folder_detail' doc.folder.id %}"
-   class="text-blue-500 hover:underline">← 返回資料夾</a>
+  <!-- 文件標題 -->
+  <h1 class="text-3xl font-bold flex items-center gap-3 mb-6">
+    📄 {{ doc.title }}
+  </h1>
 
-<h1 class="treedoc-title">📄 {{ doc.title }}</h1>
+  <!-- 上傳新版本 -->
+  <a href="{% url 'treedoc:upload_page' doc.id %}"
+     class="inline-flex items-center gap-2 mb-8
+            px-5 py-2 rounded-lg
+            bg-green-500 text-white font-semibold
+            hover:bg-green-600 transition">
+    ➕ 上傳新版本
+  </a>
 
-<a href="{% url 'treedoc:upload_page' doc.id %}"
-   class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 inline-block mb-4">
-  ➕ 新版本
-</a>
+  <!-- 版本列表 -->
+  <h2 class="text-xl font-bold mb-4">📦 版本紀錄</h2>
 
-<div id="versionTree" class="treedoc-card h-96">
-  <!-- JS 注入版本樹 -->
+  {% if versions %}
+    <div class="space-y-4">
+
+      {% for v in versions reversed %}
+        <div class="bg-white rounded-xl p-5 shadow
+                    border border-gray-200">
+
+          <!-- 版本標頭 -->
+          <div class="flex justify-between items-center mb-2">
+            <div class="font-semibold text-lg">
+              版本 {{ forloop.revcounter }}
+            </div>
+            <div class="text-sm text-gray-500">
+              {{ v.created_at|date:"Y-m-d H:i" }}
+            </div>
+          </div>
+
+          <!-- 附註 -->
+          {% if v.message %}
+            <div class="text-gray-700 mb-3">
+              📝 {{ v.message }}
+            </div>
+          {% else %}
+            <div class="text-gray-400 italic mb-3">
+              （沒有附註）
+            </div>
+          {% endif %}
+
+          <!-- 檔案下載 -->
+          {% if v.file %}
+            <a href="{{ v.file.url }}"
+               class="inline-block text-blue-600 hover:underline font-medium"
+               download>
+              ⬇ 下載檔案
+            </a>
+          {% else %}
+            <div class="text-red-400 text-sm">
+              ⚠ 此版本沒有檔案
+            </div>
+          {% endif %}
+
+        </div>
+      {% endfor %}
+
+    </div>
+  {% else %}
+    <!-- 空狀態 -->
+    <div class="bg-gray-50 rounded-xl p-8 text-center border border-gray-200">
+      <div class="text-4xl mb-3">📭</div>
+      <p class="text-gray-600 mb-4">
+        這個文件目前還沒有任何版本
+      </p>
+      <a href="{% url 'treedoc:upload_page' doc.id %}"
+         class="inline-flex items-center gap-2
+                px-5 py-2 rounded-lg
+                bg-green-500 text-white font-semibold
+                hover:bg-green-600 transition">
+        ➕ 上傳第一個版本
+      </a>
+    </div>
+  {% endif %}
+
 </div>
-
-<script src="{% static 'treedoc/version_graph.js' %}"></script>
-<script>
-loadVersionTree({{ doc.id }});
-</script>
-
-</body>
 {% endblock %}
-
-
-
-
-

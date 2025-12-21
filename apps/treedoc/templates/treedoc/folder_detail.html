@@ -1,34 +1,48 @@
 {% extends "core/base.html" %}
-{% load static %}
-
 {% block content %}
-<link rel="stylesheet" href="{% static 'treedoc/treedoc.css' %}">
 
-<body class="treedoc-page">
+<div class="max-w-4xl mx-auto px-6 py-8">
 
-<a href="{% url 'treedoc:folder_list' %}"
-   class="text-blue-500 hover:underline">← 回到資料夾列表</a>
+  <!-- 返回 -->
+  <a href="{% url 'treedoc:folder_list' %}"
+     class="text-sm text-blue-500 hover:underline">
+    ← 回到資料夾
+  </a>
 
-<h1 class="treedoc-title">🌲 {{ folder.name }}</h1>
+  <!-- 標題 -->
+  <h1 class="text-2xl font-bold flex items-center gap-2 mt-4 mb-6">
+    📁 {{ folder.name }}
+  </h1>
 
-<form method="POST" class="mb-6 flex gap-2">
-  {% csrf_token %}
-  <input type="text" name="title" placeholder="新增文件…" 
-         class="p-2 border rounded w-60">
-  <button class="px-4 py-2 bg-green-500 text-white rounded">新增</button>
-</form>
+  <!-- 新增文件 -->
+  <form method="POST"
+        action="{% url 'treedoc:create_document' folder.id %}"
+        class="flex gap-2 mb-8">
+    {% csrf_token %}
+    <input name="title" required
+           placeholder="輸入文件名稱"
+           class="flex-1 border rounded-lg px-4 py-2">
+    <button class="px-4 py-2 rounded-lg bg-green-500 text-white font-semibold">
+      ＋ 新增文件
+    </button>
+  </form>
 
-<h2 class="text-xl font-bold mb-3">📄 文件</h2>
+  <!-- 文件列表 -->
+  {% if documents %}
+    <ul class="space-y-3">
+      {% for d in documents %}
+        <li>
+          <a href="{% url 'treedoc:document_detail' d.id %}"
+             class="block border rounded-lg px-4 py-3 hover:bg-gray-50">
+            📄 {{ d.title }}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-gray-500">尚未建立任何文件</p>
+  {% endif %}
 
-{% for d in documents %}
-<a href="{% url 'treedoc:document_detail' d.id %}"
-   class="treedoc-card mb-3 block hover:scale-[1.02]">
-   📄 {{ d.title }}
-</a>
-{% endfor %}
+</div>
 
-</body>
 {% endblock %}
-
-
-

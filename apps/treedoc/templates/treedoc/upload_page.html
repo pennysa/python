@@ -1,36 +1,75 @@
 {% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}上傳版本{% endblock %}
-{% block page_class %}treedoc-page{% endblock %}
-
 {% block content %}
+<div class="max-w-xl mx-auto px-6 py-10">
 
-<div class="treedoc-card max-w-xl mx-auto">
-
-  <h1 class="text-2xl font-bold mb-4">📄 新增版本：{{ doc.title }}</h1>
-
-  <form action="{% url 'treedoc:upload_version' doc.id %}"
-        method="POST"
-        enctype="multipart/form-data">   <!-- ⭐ 必須加 -->
-    {% csrf_token %}
-
-    <label class="block font-semibold mb-1">分支名稱</label>
-    <input type="text" name="branch_name" class="w-full border rounded p-2 mb-4">
-
-    <label class="block font-semibold mb-1">版本描述</label>
-    <textarea name="message" class="w-full border rounded p-2 mb-4"></textarea>
-
-    <label class="block font-semibold mb-1">上傳檔案</label>
-    <input type="file" name="file" class="w-full mb-6">
-
-    <button class="btn-tree">📤 上傳版本</button>
-  </form>
-
-  <a href="{% url 'treedoc:document_detail' doc.id %}" class="btn-tree mt-4 inline-block">
-    ⬅ 返回文件
+  <!-- 返回 -->
+  <a href="{% url 'treedoc:document_detail' doc.id %}"
+     class="text-blue-500 hover:underline text-sm mb-6 inline-block">
+    ← 返回文件
   </a>
 
-</div>
+  <!-- 標題 -->
+  <h1 class="text-2xl font-bold flex items-center gap-2 mb-8">
+    📤 上傳新版本
+  </h1>
 
+  <!-- 文件名稱提示 -->
+  <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+    <div class="text-sm text-gray-500">文件</div>
+    <div class="font-semibold text-lg">
+      📄 {{ doc.title }}
+    </div>
+  </div>
+
+  <!-- 上傳表單 -->
+  <form method="POST" enctype="multipart/form-data"
+        action="{% url 'treedoc:upload_version' doc.id %}"
+        class="space-y-6">
+
+    {% csrf_token %}
+
+    <!-- 檔案 -->
+    <div>
+      <label class="block font-semibold mb-2">
+        檔案
+      </label>
+      <input type="file" name="file" required
+             class="block w-full border border-gray-300
+                    rounded-lg p-2">
+    </div>
+
+    <!-- 附註 -->
+    <div>
+      <label class="block font-semibold mb-2">
+        附註（選填）
+      </label>
+      <textarea name="message" rows="3"
+                placeholder="例如：修正第 3 頁錯字"
+                class="w-full border border-gray-300
+                       rounded-lg p-3"></textarea>
+    </div>
+
+    <!-- 按鈕 -->
+    <div class="flex gap-3">
+      <button type="submit"
+              class="px-6 py-2 rounded-lg
+                     bg-green-500 text-white font-semibold
+                     hover:bg-green-600 transition">
+        ✅ 上傳
+      </button>
+
+      <a href="{% url 'treedoc:document_detail' doc.id %}"
+         class="px-6 py-2 rounded-lg
+                bg-gray-200 text-gray-700 font-semibold
+                hover:bg-gray-300 transition">
+        取消
+      </a>
+    </div>
+
+  </form>
+
+</div>
 {% endblock %}
+

@@ -3,80 +3,60 @@ from django.conf import settings
 
 
 # ============================
-# 📁 Folder
+# 📁 Folder（可巢狀）
 # ============================
-class TreeFolder(models.Model):
+class Folder(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="treedoc_folders"
+        related_name="folders"
     )
+
+    parent = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="children"
+    )
+
     name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
 
 
 # ============================
-# 📄 Document（屬於 Folder）
+# 📄 Document（一個檔案）
 # ============================
-class TreeDocument(models.Model):
-    folder = models.ForeignKey(
-        TreeFolder,
-        on_delete=models.CASCADE,
-        related_name="documents",
-        null=True,      # ⭐ 允許舊資料為空
-        blank=True
-    )
-
+class Document(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="treedocs"
+        related_name="documents"
     )
 
-    title = models.CharField(max_length=200)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    head_version = models.ForeignKey(
-        "TreeVersion",
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name="head_of"
-    )
-
-    def __str__(self):
-        return self.title
-
-
-
-# ============================
-# 🌿 Version Tree
-# ============================
-class TreeVersion(models.Model):
-    document = models.ForeignKey(
-        TreeDocument,
+    folder = models.ForeignKey(
+        Folder,
         on_delete=models.CASCADE,
-        related_name="versions"
+        related_name="documents"
     )
 
-    parent = models.ForeignKey(
-        "self",
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name="children"
+    file = models.FileField(upload_to="documents/")
+    note = models.CharField(
+        max_length=300,
+        blank=True,
+        help_text="文件附註（像 GitHub commit message）"
     )
-
-    branch_name = models.CharField(max_length=100, default="main")
-    message = models.CharField(max_length=300, blank=True)
-    content = models.TextField(blank=True)
-    file = models.FileField(upload_to="treedoc_files/", null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.document.title} | {self.branch_name}"
-
-
+        return self.file.name

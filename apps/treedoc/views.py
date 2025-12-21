@@ -1,141 +1,175 @@
-from django.shortcuts import render, get_object_or_404, redirect
+#from django.shortcuts import render, get_object_or_404, redirect
+#from django.contrib.auth.decorators import login_required
+#from django.http import JsonResponse
+#from django.contrib import messages
+
+#from .models import Folder, Document
+
+
+# ============================
+# 📁 資料夾列表（根目錄）
+# ============================
+# @login_required
+# def folder_list(request):
+#     folders = Folder.objects.filter(
+#         user=request.user,
+#         parent__isnull=True
+#     )
+#     return render(request, "treedoc/folder_list.html", {
+#         "folders": folders
+#     })
+
+
+# # ============================
+# # 📁 資料夾內容（子資料夾 + 文件）
+# # ============================
+# @login_required
+# def folder_detail(request, folder_id):
+#     folder = get_object_or_404(
+#         Folder,
+#         id=folder_id,
+#         user=request.user
+#     )
+
+#     subfolders = folder.children.all()
+#     documents = folder.documents.all()
+
+#     return render(request, "treedoc/folder_detail.html", {
+#         "folder": folder,
+#         "subfolders": subfolders,
+#         "documents": documents,
+#     })
+
+
+# # ============================
+# # ➕ 新增資料夾
+# # ============================
+# @login_required
+# def create_folder(request):
+#     if request.method == "POST":
+#         name = request.POST.get("name", "").strip()
+#         parent_id = request.POST.get("parent")
+
+#         if not name:
+#             messages.error(request, "資料夾名稱不能是空的")
+#             return redirect("treedoc:folder_list")
+
+#         parent = None
+#         if parent_id:
+#             parent = Folder.objects.filter(
+#                 id=parent_id,
+#                 user=request.user
+#             ).first()
+
+#         Folder.objects.create(
+#             user=request.user,
+#             parent=parent,
+#             name=name
+#         )
+
+#         messages.success(request, "資料夾已建立")
+
+#         if parent:
+#             return redirect("treedoc:folder_detail", folder_id=parent.id)
+#         return redirect("treedoc:folder_list")
+
+#     return redirect("treedoc:folder_list")
+
+
+# # ============================
+# # ✏️ 重新命名資料夾
+# # ============================
+# @login_required
+# def rename_folder(request, folder_id):
+#     folder = get_object_or_404(
+#         Folder,
+#         id=folder_id,
+#         user=request.user
+#     )
+
+#     if request.method == "POST":
+#         new_name = request.POST.get("name", "").strip()
+#         if new_name:
+#             folder.name = new_name
+#             folder.save()
+#             messages.success(request, "資料夾名稱已更新")
+
+#     return redirect("treedoc:folder_detail", folder_id=folder.id)
+
+
+# # ============================
+# # ❌ 刪除資料夾（含內容）
+# # ============================
+# @login_required
+# def delete_folder(request, folder_id):
+#     folder = get_object_or_404(
+#         Folder,
+#         id=folder_id,
+#         user=request.user
+#     )
+
+#     parent = folder.parent
+#     folder.delete()
+#     messages.success(request, "資料夾已刪除")
+
+#     if parent:
+#         return redirect("treedoc:folder_detail", folder_id=parent.id)
+#     return redirect("treedoc:folder_list")
+
+
+# # ============================
+# # 📄 上傳文件（檔案 + 附註）
+# # ============================
+# @login_required
+# def upload_document(request, folder_id):
+#     folder = get_object_or_404(
+#         Folder,
+#         id=folder_id,
+#         user=request.user
+#     )
+
+#     if request.method == "POST":
+#         file = request.FILES.get("file")
+#         note = request.POST.get("note", "").strip()
+
+#         if not file:
+#             messages.error(request, "請選擇檔案")
+#             return redirect("treedoc:folder_detail", folder_id=folder.id)
+
+#         Document.objects.create(
+#             user=request.user,
+#             folder=folder,
+#             file=file,
+#             note=note
+#         )
+
+#         messages.success(request, "文件已上傳")
+#         return redirect("treedoc:folder_detail", folder_id=folder.id)
+
+#     return redirect("treedoc:folder_detail", folder_id=folder.id)
+
+
+# ============================
+# ❌ 刪除文件
+# ============================
+#@login_required
+#def delete_document(request, doc_id):
+#    doc = get_object_or_404(
+ #       Document,
+ #       id=doc_id,
+ #       user=request.user
+ #   )
+
+ #   folder_id = doc.folder.id
+ #   doc.file.delete(save=False)
+ #   doc.delete()
+
+ #   messages.success(request, "文件已刪除")
+ #   return redirect("treedoc:folder_detail", folder_id=folder_id)
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.contrib import messages    # ⭐ 你之前漏掉這個
-from .models import TreeFolder, TreeDocument, TreeVersion
 
 
-# ============================
-# 📁 Folder List
-# ============================
 @login_required
-def folder_list(request):
-    folders = TreeFolder.objects.filter(user=request.user)
-    return render(request, "treedoc/folder_list.html", {"folders": folders})
-
-
-# ============================
-# 📁 Folder Detail（顯示文件）
-# ============================
-@login_required
-def folder_detail(request, folder_id):
-    folder = get_object_or_404(TreeFolder, id=folder_id, user=request.user)
-    return render(request, "treedoc/folder_detail.html", {
-        "folder": folder,
-        "documents": folder.documents.all(),
-    })
-
-
-# ============================
-# ➕ 在 Folder 裡建立 Document
-# ============================
-@login_required
-def create_document(request, folder_id):
-    folder = get_object_or_404(TreeFolder, id=folder_id, user=request.user)
-
-    if request.method == "POST":
-        title = request.POST.get("title")
-        if title:
-            doc = TreeDocument.objects.create(
-                user=request.user,
-                folder=folder,
-                title=title,
-            )
-            return redirect("treedoc:document_detail", doc_id=doc.id)
-
-    return redirect("treedoc:folder_detail", folder_id=folder.id)
-
-
-# ============================
-# 📄 Document Detail（版本列表）
-# ============================
-@login_required
-def document_detail(request, doc_id):
-    doc = get_object_or_404(TreeDocument, id=doc_id, user=request.user)
-    versions = doc.versions.order_by("created_at")
-
-    return render(request, "treedoc/document_detail.html", {
-        "doc": doc,
-        "versions": versions,
-    })
-
-
-# ============================
-# ⬆️ Upload Version Page
-# ============================
-@login_required
-def upload_page(request, doc_id):
-    doc = get_object_or_404(TreeDocument, id=doc_id, user=request.user)
-    return render(request, "treedoc/upload_page.html", {"doc": doc})
-
-
-# ============================
-# ⬆️ Upload Version（正式修正版）
-# ============================
-@login_required
-def upload_version(request, doc_id):
-    doc = get_object_or_404(TreeDocument, id=doc_id, user=request.user)
-
-    if request.method == "POST":
-        file = request.FILES.get("file")              # ⭐ 一定要用 request.FILES
-        message = request.POST.get("message", "")
-        branch = request.POST.get("branch_name", "main")
-        content = request.POST.get("content", "")
-
-        parent_id = request.POST.get("parent")
-        parent = TreeVersion.objects.filter(id=parent_id).first() if parent_id else None
-
-        version = TreeVersion.objects.create(
-            document=doc,
-            user=request.user,
-            file=file,
-            branch_name=branch,
-            message=message,
-            content=content,
-            parent=parent,
-        )
-
-        # 更新最新版
-        doc.head_version = version
-        doc.save()
-
-        messages.success(request, "版本已成功上傳！")
-        return redirect("treedoc:document_detail", doc_id=doc.id)
-
-    return redirect("treedoc:upload_page", doc_id=doc.id)
-
-
-# ============================
-# 🌳 Version Tree JSON
-# ============================
-@login_required
-def version_tree_json(request, doc_id):
-    doc = get_object_or_404(TreeDocument, id=doc_id, user=request.user)
-    versions = doc.versions.all()
-
-    def build(v):
-        return {
-            "id": v.id,
-            "branch": v.branch_name,
-            "message": v.message,
-            "created_at": v.created_at.strftime("%Y-%m-%d %H:%M"),
-            "file": v.file.url if v.file else None,
-            "children": [build(child) for child in v.children.all()],
-        }
-
-    roots = versions.filter(parent__isnull=True)
-    return JsonResponse([build(v) for v in roots], safe=False)
-
-
-# ============================
-# 📁 建立資料夾（Ajax）
-# ============================
-@login_required
-def create_folder(request):
-    if request.method == "POST":
-        name = request.POST.get("name")
-        folder = TreeFolder.objects.create(user=request.user, name=name)
-        return JsonResponse({"success": True, "id": folder.id, "name": folder.name})
-
-    return JsonResponse({"success": False})
-
+def treedoc_placeholder(request):
+    return render(request, "treedoc/placeholder.html")

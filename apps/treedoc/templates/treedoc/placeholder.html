@@ -1,0 +1,66 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+  .forest {
+    position: relative;
+    height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .tree {
+    font-size: 6rem;
+    animation: sway 3.5s ease-in-out infinite;
+  }
+
+  .leaf {
+    position: absolute;
+    top: -10%;
+    font-size: 1.5rem;
+    animation: fall 6s linear infinite;
+    opacity: 0.8;
+  }
+
+  @keyframes sway {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(2deg); }
+    50% { transform: rotate(0deg); }
+    75% { transform: rotate(-2deg); }
+    100% { transform: rotate(0deg); }
+  }
+
+  @keyframes fall {
+    0% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 0;
+    }
+    10% { opacity: 1; }
+    100% {
+      transform: translateY(80vh) rotate(360deg);
+      opacity: 0;
+    }
+  }
+</style>
+
+<div class="forest">
+  <div class="tree">🌲</div>
+
+  <!-- 落葉 -->
+  <div class="leaf" style="left:10%; animation-delay:0s;">🍃</div>
+  <div class="leaf" style="left:30%; animation-delay:2s;">🍂</div>
+  <div class="leaf" style="left:60%; animation-delay:1s;">🍃</div>
+  <div class="leaf" style="left:80%; animation-delay:3s;">🍂</div>
+</div>
+
+<div class="text-center mt-6">
+  <h1 class="text-2xl font-bold mb-2">🌱 Treedoc 正在生長中</h1>
+  <p class="text-gray-600">
+    文件管理系統還在森林裡慢慢長大，<br>
+    等它準備好時會通知你 ✨
+  </p>
+</div>
+{% endblock %}
