@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>個人任務 Dashboard</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- ===== 自訂日 / 夜樣式 ===== -->
+  <style>
+    /* ===== 背景切換 ===== */
+    body.day {
+      background: linear-gradient(to bottom, #f8fafc, #eef2ff);
+      color: #1f2937;
+    }
+
+    body.night {
+      background: linear-gradient(to bottom,#0f172a, /* slate-900 */#111827    /* gray-900 */);
+      color: #e5e7eb;
+    } 
+
+
+    /* ===== 星空 ===== */
+    .stars {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1s ease;
+      z-index: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 20%, white, transparent),
+        radial-gradient(1px 1px at 30% 80%, white, transparent),
+        radial-gradient(1px 1px at 70% 40%, white, transparent),
+        radial-gradient(1px 1px at 90% 60%, white, transparent);
+    }
+
+    body.night .stars {
+      opacity: 0.6;
+    }
+
+    /* ===== Navbar ===== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      transition: background 0.6s ease, color 0.6s ease;
+    }
+
+    body.day .navbar {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+    }
+
+    body.night .navbar {
+      background: rgba(2, 6, 23, 0.85);
+      backdrop-filter: blur(8px);
+    }
+
+    /* ===== 卡片 ===== */
+    .card {
+      border-radius: 1rem;
+      padding: 1.5rem;
+      transition: background 0.6s ease, color 0.6s ease;
+    }
+
+    body.day .card {
+      background: white;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    }
+
+    body.night .card {
+      background: rgba(30, 41, 59, 0.85); /* slate-800 */
+      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+    }
+
+  </style>
+</head>
+
+<body class="day">
+
+  <!-- 星空 -->
+  <div class="stars"></div>
+
+  <!-- ===== 導航列 ===== -->
+  <nav class="navbar flex justify-between items-center px-6 py-3">
+    <div class="flex space-x-6 font-semibold text-lg">
+      <a href="/" class="hover:opacity-70">🏠 Home</a>
+      <a href="/personal/" class="hover:opacity-70">🪄 Personal</a>
+      <a href="/treedoc/" class="hover:opacity-70">🌳 Treedoc</a>
+      <a href="/personal/dashboard/" class="hover:opacity-70">📊 Dashboard</a>
+    </div>
+
+    <button id="themeToggle"
+      class="px-3 py-1 rounded-lg bg-pink-200/70 hover:bg-pink-300 transition text-sm">
+      🌙 夜間模式
+    </button>
+  </nav>
+
+  <!-- ===== 主內容 ===== -->
+  <main class="relative z-10 max-w-5xl mx-auto px-6 py-10">
+
+    <h1 class="text-2xl font-bold mb-8 flex items-center gap-2">
+      📊 個人任務 Dashboard
+    </h1>
+
+    <div class="card">
+      <p class="text-sm opacity-70 mb-4">
+        每月完成任務數量（近期）
+      </p>
+
+      <canvas id="monthlyEventChart" height="140"></canvas>
+    </div>
+
+  </main>
+
+  <!-- ===== JS ===== -->
+  <script>
+    /* ===== 主題切換 ===== */
+    const body = document.body;
+    const toggleBtn = document.getElementById("themeToggle");
+
+    function setTheme(mode) {
+      body.classList.remove("day", "night");
+      body.classList.add(mode);
+      toggleBtn.textContent = mode === "night" ? "☀️ 日間模式" : "🌙 夜間模式";
+      localStorage.setItem("theme", mode);
+    }
+
+    toggleBtn.addEventListener("click", () => {
+      const next = body.classList.contains("day") ? "night" : "day";
+      setTheme(next);
+      updateChartColor(next);
+    });
+
+    // 初始主題
+    const saved = localStorage.getItem("theme") || "day";
+    setTheme(saved);
+
+    /* ===== Chart.js ===== */
+    let chart;
+
+    function createChart(color) {
+      const ctx = document.getElementById("monthlyEventChart").getContext("2d");
+
+      chart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: [],
+          datasets: [{
+            data: [],
+            backgroundColor: color,
+            borderRadius: 8,
+            maxBarThickness: 48
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false } },
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 },
+              grid: { color: "rgba(148,163,184,0.3)" }
+            }
+          }
+        }
+      });
+    }
+
+    function updateChartColor(mode) {
+      if (!chart) return;
+      chart.data.datasets[0].backgroundColor =
+      mode === "night"
+      ? "rgba(165,180,252,0.85)"  // indigo-300
+      : "rgba(99,102,241,0.65)"
+      chart.update();
+    }
+
+    // 先建立空圖
+    createChart(
+      saved === "night"
+        ? "rgba(129,140,248,0.8)"
+        : "rgba(99,102,241,0.65)"
+    );
+
+    // 拉資料
+    fetch("/personal/api/stats/monthly-completed-events/")
+      .then(res => res.json())
+      .then(result => {
+        chart.data.labels = result.labels;
+        chart.data.datasets[0].data = result.data;
+        chart.update();
+      });
+  </script>
+
+</body>
+</html>
+
+

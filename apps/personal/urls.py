@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("dashboard/", views.dashboard, name="personal_dashboard"),
     path("", views.personal_calendar,  name="personal_calendar"),
     path("events/", views.get_events, name="get_events"),
 
@@ -10,7 +11,12 @@ urlpatterns = [
     path("delete/<int:event_id>/", views.delete_event, name="delete_event"),
     path("toggle/<int:event_id>/", views.toggle_complete, name="toggle_complete"),
     path("stats/", views.event_stats, name="event_stats"),
+    path("api/stats/monthly-completed-events/",views.monthly_completed_event_stats,name="monthly_completed_event_stats"
+    
+),
+
 ]
+
 
 
 

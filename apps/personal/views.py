@@ -11,6 +11,12 @@ import json
 from datetime import datetime
 
 
+
+from django.utils import timezone
+from django.db.models import Count
+from django.db.models.functions import TruncMonth
+
+
 # ======================================================
 # 日期解析（統一前後端格式）
 # ======================================================
@@ -191,5 +197,35 @@ def _invalidate(user_id):
 
 
 
+
+
+def monthly_completed_event_stats(request):
+    qs = (
+        Event.objects
+        .filter(
+            user=request.user,
+            is_completed=True
+        )
+        .annotate(month=TruncMonth("created_at"))
+        .values("month")
+        .annotate(count=Count("id"))
+        .order_by("month")
+    )
+
+    labels = []
+    data = []
+
+    for item in qs:
+        labels.append(item["month"].strftime("%Y-%m"))
+        data.append(item["count"])
+
+    return JsonResponse({
+        "labels": labels,
+        "data": data
+    })
+
+@login_required
+def dashboard(request):
+    return render(request, "personal/dashboard.html")
 
 
