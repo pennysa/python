@@ -140,10 +140,10 @@ SOCIALACCOUNT_PROVIDERS = {
             "key": "",
         },
         "SCOPE": ["profile", "email"],
-        "AUTH_PARAMS": {"access_type": "online"},
-        "FETCH_USERINFO": True,
     }
 }
+
+
 
 # ============================================================
 # 靜態檔案設定

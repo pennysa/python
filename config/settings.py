@@ -24,6 +24,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",   # ⭐ 必須
+
+    # ⭐ allauth（SSO 核心）
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
 
     # 🌈 Planora 模組
     "apps.core",
@@ -31,9 +38,10 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.treedoc",
 
-    # ⭐ Celery Beat（真的跑排程）
+    # ⭐ Celery Beat
     "django_celery_beat",
 ]
+
 
 # ============================================================
 # 🧱 Middleware
@@ -46,6 +54,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 # ============================================================
@@ -97,6 +106,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
 # ============================================================
 # 🌍 i18n / timezone
 # ============================================================
@@ -104,7 +118,7 @@ LANGUAGE_CODE = "zh-hant"
 TIME_ZONE = "Asia/Taipei"
 USE_I18N = True
 USE_TZ = True
-
+SITE_ID = 1
 # ============================================================
 # 📦 Static / Media
 # ============================================================
@@ -156,3 +170,31 @@ CELERY_TIMEZONE = "Asia/Taipei"
 # ⏰ Celery Beat（功能 ④）
 # ============================================================
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+
+# ============================================================
+# ✉️ Email（開發 / Demo 階段：不真的寄信）
+# ============================================================
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# allauth：關閉 email 驗證（專題 / demo 用）
+ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_EMAIL_REQUIRED = False
+
+
+
+
+# 刪除最後面那兩段重複的 SOCIALACCOUNT_PROVIDERS，改用這段：
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            # 優先讀取環境變數，讀不到再用你提供的硬編碼值（方便佈署）
+            'client_id': os.getenv('GOOGLE_CLIENT_ID', '1058221232607-humrhvv8c6kvltnj456qk71u54m2qoc9.apps.googleusercontent.com'),
+            'secret': os.getenv('GOOGLE_CLIENT_SECRET', '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'),
+            'key': ''
+        },
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'}
+    }
+}
